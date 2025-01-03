@@ -18,7 +18,7 @@ Para garantir que o sistema se mantenha executando nas versões adequadas, foi i
 
 ---
 
-## Bibliotecas
+### Bibliotecas
 
 - **Spring Web**: Para criar o projeto web e os endpoints RESTful.
 - **Spring Data JPA**: Para mapear as entidades com o banco de dados.
@@ -28,10 +28,11 @@ Para garantir que o sistema se mantenha executando nas versões adequadas, foi i
 - **Spring Boot Test**: Para realizar os testes com JUnit.
 - **Springdoc Openapi Starter Webmvc UI**: Para documentar a api.
 - **Actuator**: Para gerar métricas.
+- **Mapstruct**: Para fazer mapeamento de entidades para DTO.
 
 ---
 
-## Banco de dados instalado nativamente
+### Banco de dados instalado nativamente
 
 Para este projeto optei para que os bancos de dados se mantenham instalados nativamente na maquina de destina, visando evitar perdas de dados de forma
 inesperada, problema que pode ocorrer em aplicações que usam bancos de dados em container, o nome padrão para database é `petshop`.

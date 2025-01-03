@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +18,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import com.pedro.petshop.dtos.BreedDTO;
 import com.pedro.petshop.entities.Breed;
+import com.pedro.petshop.mappers.BreedMapper;
 import com.pedro.petshop.services.BreedService;
 
 @SpringBootTest
@@ -28,22 +29,26 @@ class BreedControllerTest {
     @Autowired
     private BreedController breedController;
 
+    @Autowired
+    private BreedMapper breedMapper;
+
     @MockitoBean
     private BreedService breedService;
 
     @Test
     void testGetAllBreedsPaged() {
-        List<Breed> mockBreeds = Arrays.asList(
-                createBreed(1L, "Labrador"),
-                createBreed(2L, "Poodle"));
+        BreedDTO breedDTO1 = createBreed(1L, "Labrador");
+        BreedDTO breedDTO2 = createBreed(2L, "Poodle");
+        Breed breed1 = breedMapper.toEntity(breedDTO1);
+        Breed breed2 = breedMapper.toEntity(breedDTO2);
 
-        Page<Breed> mockPage = new PageImpl<>(mockBreeds, PageRequest.of(0, 10), mockBreeds.size());
+        Page<Breed> mockPage = new PageImpl<>(List.of(breed1, breed2), PageRequest.of(0, 10), 2);
 
         when(breedService.findAll(any(Pageable.class))).thenReturn(mockPage);
 
         Pageable pageable = PageRequest.of(0, 10);
 
-        Page<Breed> result = breedController.getAllBreeds(pageable);
+        Page<BreedDTO> result = breedController.getAllBreeds(pageable);
         assertEquals(2, result.getContent().size());
         assertEquals("Labrador", result.getContent().get(0).getDescription());
         assertEquals("Poodle", result.getContent().get(1).getDescription());
@@ -55,13 +60,14 @@ class BreedControllerTest {
 
     @Test
     void testGetBreedById_BreedExists() {
-        Breed mockBreed = createBreed(1L, "Labrador");
+        BreedDTO mockBreedDTO = createBreed(1L, "Labrador");
+        Breed mockBreed = breedMapper.toEntity(mockBreedDTO);
         when(breedService.findById(1L)).thenReturn(Optional.of(mockBreed));
 
-        ResponseEntity<Breed> response = breedController.getBreedById(1L);
+        ResponseEntity<BreedDTO> response = breedController.getBreedById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        Breed body = Optional.ofNullable(response.getBody())
+        BreedDTO body = Optional.ofNullable(response.getBody())
                 .orElseThrow(() -> new AssertionError("Response body should not be null"));
         assertEquals("Labrador", body.getDescription());
     }
@@ -70,31 +76,33 @@ class BreedControllerTest {
     void testGetBreedById_BreedNotFound() {
         when(breedService.findById(1L)).thenReturn(Optional.empty());
 
-        ResponseEntity<Breed> response = breedController.getBreedById(1L);
+        ResponseEntity<BreedDTO> response = breedController.getBreedById(1L);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
     void testCreateBreed() {
-        Breed mockBreed = createBreed(null, "Labrador");
+        BreedDTO mockBreedDTO = createBreed(null, "Labrador");
+        Breed mockBreed = breedMapper.toEntity(mockBreedDTO);
         when(breedService.create(any(Breed.class))).thenReturn(mockBreed);
 
-        Breed breedToCreate = createBreed(null, "Labrador");
+        BreedDTO breedToCreate = createBreed(null, "Labrador");
 
-        Breed result = breedController.createBreed(breedToCreate);
+        BreedDTO result = breedController.createBreed(breedToCreate);
 
         assertEquals("Labrador", result.getDescription());
     }
 
     @Test
     void testUpdateBreed() {
-        Breed mockBreed = createBreed(1L, "Labrador");
+        BreedDTO mockBreedDTO = createBreed(1L, "Labrador");
+        Breed mockBreed = breedMapper.toEntity(mockBreedDTO);
         when(breedService.update(any(Long.class), any(Breed.class))).thenReturn(mockBreed);
 
-        Breed breedToUpdate = createBreed(1L, "Labrador");
+        BreedDTO breedToUpdate = createBreed(1L, "Labrador");
 
-        Breed result = breedController.updateBreed(1L, breedToUpdate);
+        BreedDTO result = breedController.updateBreed(1L, breedToUpdate);
 
         assertEquals("Labrador", result.getDescription());
     }
@@ -108,8 +116,8 @@ class BreedControllerTest {
         assertEquals(true, result);
     }
 
-    private Breed createBreed(Long id, String description) {
-        Breed breed = new Breed();
+    private BreedDTO createBreed(Long id, String description) {
+        BreedDTO breed = new BreedDTO();
         breed.setId(id);
         breed.setDescription(description);
         return breed;

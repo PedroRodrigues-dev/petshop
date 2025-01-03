@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.pedro.petshop.configs.RolesAllowed;
+import com.pedro.petshop.dtos.AddressDTO;
 import com.pedro.petshop.entities.Address;
+import com.pedro.petshop.mappers.AddressMapper;
 import com.pedro.petshop.services.AddressService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,9 +31,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 public class AddressController {
 
         private final AddressService addressService;
+        private final AddressMapper addressMapper;
 
-        public AddressController(AddressService addressService) {
+        public AddressController(AddressService addressService, AddressMapper addressMapper) {
                 this.addressService = addressService;
+                this.addressMapper = addressMapper;
         }
 
         @Operation(summary = "Create a new address", description = "Creates a new address record in the system")
@@ -40,25 +45,30 @@ public class AddressController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data")
         })
+        @RolesAllowed({ "ADMIN" })
         @PostMapping
-        public Address createAddress(@RequestBody Address address) {
-                return addressService.create(address);
+        public AddressDTO createAddress(@RequestBody AddressDTO address) {
+                return addressMapper.toDto(addressService.create(addressMapper.toEntity(address)));
         }
 
-        @Operation(summary = "Get address by ID", description = "Retrieves a specific address by its ID")
+        @Operation(summary = "Get address by ID", description = "Retrieves a specific address by its ID", parameters = {
+                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Address found"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Address not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @GetMapping("/{id}")
-        public ResponseEntity<Address> getAddressById(
+        public ResponseEntity<AddressDTO> getAddressById(
                         @Parameter(description = "ID of the address to be retrieved") @PathVariable Long id) {
                 Optional<Address> address = addressService.findById(id);
 
-                return address.map(ResponseEntity::ok)
-                                .orElseGet(() -> ResponseEntity.notFound().build());
+                if (address.isPresent())
+                        return ResponseEntity.ok(addressMapper.toDto(address.get()));
+
+                return ResponseEntity.notFound().build();
         }
 
         @Operation(summary = "Get all addresses", description = "Retrieves all address records", parameters = {
@@ -69,12 +79,14 @@ public class AddressController {
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
         })
+        @RolesAllowed({ "ADMIN" })
         @GetMapping
-        public Page<Address> getAllAddresses(@Parameter(hidden = true) Pageable pageable) {
-                return addressService.findAll(pageable);
+        public Page<AddressDTO> getAllAddresses(@Parameter(hidden = true) Pageable pageable) {
+                return addressMapper.pageToPageDTO(addressService.findAll(pageable));
         }
 
-        @Operation(summary = "Update an existing address", description = "Updates an existing address record")
+        @Operation(summary = "Update an existing address", description = "Updates an existing address record", parameters = {
+                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Address updated successfully"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data"),
@@ -82,20 +94,23 @@ public class AddressController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Address not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @PutMapping("/{id}")
-        public Address updateAddress(
+        public AddressDTO updateAddress(
                         @Parameter(description = "ID of the address to be updated") @PathVariable Long id,
-                        @RequestBody Address address) {
-                return addressService.update(id, address);
+                        @RequestBody AddressDTO address) {
+                return addressMapper.toDto(addressService.update(id, addressMapper.toEntity(address)));
         }
 
-        @Operation(summary = "Delete an address", description = "Deletes an address record by its ID")
+        @Operation(summary = "Delete an address", description = "Deletes an address record by its ID", parameters = {
+                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Address deleted successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Address not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @DeleteMapping("/{id}")
         public boolean deleteAddress(
                         @Parameter(description = "ID of the address to be deleted") @PathVariable Long id) {

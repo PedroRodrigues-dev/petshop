@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.pedro.petshop.configs.RolesAllowed;
+import com.pedro.petshop.dtos.UserDTO;
 import com.pedro.petshop.entities.User;
+import com.pedro.petshop.mappers.UserMapper;
 import com.pedro.petshop.services.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,9 +31,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 public class UserController {
 
         private final UserService userService;
+        private final UserMapper userMapper;
 
-        public UserController(UserService userService) {
+        public UserController(UserService userService, UserMapper userMapper) {
                 this.userService = userService;
+                this.userMapper = userMapper;
         }
 
         @Operation(summary = "Create a new user", description = "Creates a new user in the system")
@@ -40,25 +45,30 @@ public class UserController {
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
         })
+        @RolesAllowed({ "ADMIN" })
         @PostMapping
-        public User createUser(@RequestBody User user) {
-                return userService.create(user);
+        public UserDTO createUser(@RequestBody UserDTO user) {
+                return userMapper.toDto(userService.create(userMapper.toEntity(user)));
         }
 
-        @Operation(summary = "Get user by CPF", description = "Retrieves a specific user by their CPF")
+        @Operation(summary = "Get user by CPF", description = "Retrieves a specific user by their CPF", parameters = {
+                        @Parameter(name = "cpf", description = "CPF number", in = ParameterIn.PATH, example = "12345678900") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "User found"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "User not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @GetMapping("/{cpf}")
-        public ResponseEntity<User> getUserById(
+        public ResponseEntity<UserDTO> getUserById(
                         @Parameter(description = "CPF of the user to be retrieved") @PathVariable String cpf) {
                 Optional<User> user = userService.findById(cpf);
 
-                return user.map(ResponseEntity::ok)
-                                .orElseGet(() -> ResponseEntity.notFound().build());
+                if (user.isPresent())
+                        return ResponseEntity.ok(userMapper.toDto(user.get()));
+
+                return ResponseEntity.notFound().build();
         }
 
         @Operation(summary = "Get all users", description = "Retrieves all users from the system", parameters = {
@@ -69,12 +79,14 @@ public class UserController {
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
         })
+        @RolesAllowed({ "ADMIN" })
         @GetMapping
-        public Page<User> getAllUsers(@Parameter(hidden = true) Pageable pageable) {
-                return userService.findAll(pageable);
+        public Page<UserDTO> getAllUsers(@Parameter(hidden = true) Pageable pageable) {
+                return userMapper.pageToPageDTO(userService.findAll(pageable));
         }
 
-        @Operation(summary = "Update an existing user", description = "Updates an existing user's details")
+        @Operation(summary = "Update an existing user", description = "Updates an existing user's details", parameters = {
+                        @Parameter(name = "cpf", description = "CPF number", in = ParameterIn.PATH, example = "12345678900") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "User updated successfully"),
                         @ApiResponse(responseCode = "400", description = "Invalid user input data"),
@@ -82,20 +94,23 @@ public class UserController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "User not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @PutMapping("/{cpf}")
-        public User updateUser(
+        public UserDTO updateUser(
                         @Parameter(description = "CPF of the user to be updated") @PathVariable String cpf,
-                        @RequestBody User user) {
-                return userService.update(cpf, user);
+                        @RequestBody UserDTO user) {
+                return userMapper.toDto(userService.update(cpf, userMapper.toEntity(user)));
         }
 
-        @Operation(summary = "Delete a user", description = "Deletes a user record by their CPF")
+        @Operation(summary = "Delete a user", description = "Deletes a user record by their CPF", parameters = {
+                        @Parameter(name = "cpf", description = "CPF number", in = ParameterIn.PATH, example = "12345678900") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "User deleted successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "User not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @DeleteMapping("/{cpf}")
         public boolean deleteUser(@Parameter(description = "CPF of the user to be deleted") @PathVariable String cpf) {
                 return userService.delete(cpf);

@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.pedro.petshop.configs.RolesAllowed;
+import com.pedro.petshop.dtos.BreedDTO;
 import com.pedro.petshop.entities.Breed;
+import com.pedro.petshop.mappers.BreedMapper;
 import com.pedro.petshop.services.BreedService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,9 +31,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 public class BreedController {
 
         private final BreedService breedService;
+        private final BreedMapper breedMapper;
 
-        public BreedController(BreedService breedService) {
+        public BreedController(BreedService breedService, BreedMapper breedMapper) {
                 this.breedService = breedService;
+                this.breedMapper = breedMapper;
         }
 
         @Operation(summary = "Create a new breed", description = "Creates a new breed record in the system")
@@ -40,25 +45,30 @@ public class BreedController {
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
         })
+        @RolesAllowed({ "ADMIN" })
         @PostMapping
-        public Breed createBreed(@RequestBody Breed breed) {
-                return breedService.create(breed);
+        public BreedDTO createBreed(@RequestBody BreedDTO breed) {
+                return breedMapper.toDto(breedService.create(breedMapper.toEntity(breed)));
         }
 
-        @Operation(summary = "Get breed by ID", description = "Retrieves a specific breed by its ID")
+        @Operation(summary = "Get breed by ID", description = "Retrieves a specific breed by its ID", parameters = {
+                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Breed found"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Breed not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @GetMapping("/{id}")
-        public ResponseEntity<Breed> getBreedById(
+        public ResponseEntity<BreedDTO> getBreedById(
                         @Parameter(description = "ID of the breed to be retrieved") @PathVariable Long id) {
                 Optional<Breed> breed = breedService.findById(id);
 
-                return breed.map(ResponseEntity::ok)
-                                .orElseGet(() -> ResponseEntity.notFound().build());
+                if (breed.isPresent())
+                        return ResponseEntity.ok(breedMapper.toDto(breed.get()));
+
+                return ResponseEntity.notFound().build();
         }
 
         @Operation(summary = "Get all breeds", description = "Retrieves all breed records", parameters = {
@@ -69,12 +79,14 @@ public class BreedController {
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
         })
+        @RolesAllowed({ "ADMIN" })
         @GetMapping
-        public Page<Breed> getAllBreeds(@Parameter(hidden = true) Pageable pageable) {
-                return breedService.findAll(pageable);
+        public Page<BreedDTO> getAllBreeds(@Parameter(hidden = true) Pageable pageable) {
+                return breedMapper.pageToPageDTO(breedService.findAll(pageable));
         }
 
-        @Operation(summary = "Update an existing breed", description = "Updates an existing breed record")
+        @Operation(summary = "Update an existing breed", description = "Updates an existing breed record", parameters = {
+                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Breed updated successfully"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data"),
@@ -82,20 +94,23 @@ public class BreedController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Breed not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @PutMapping("/{id}")
-        public Breed updateBreed(
+        public BreedDTO updateBreed(
                         @Parameter(description = "ID of the breed to be updated") @PathVariable Long id,
-                        @RequestBody Breed breed) {
-                return breedService.update(id, breed);
+                        @RequestBody BreedDTO breed) {
+                return breedMapper.toDto(breedService.update(id, breedMapper.toEntity(breed)));
         }
 
-        @Operation(summary = "Delete a breed", description = "Deletes a breed record by its ID")
+        @Operation(summary = "Delete a breed", description = "Deletes a breed record by its ID", parameters = {
+                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Breed deleted successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Breed not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @DeleteMapping("/{id}")
         public boolean deleteBreed(@Parameter(description = "ID of the breed to be deleted") @PathVariable Long id) {
                 return breedService.delete(id);

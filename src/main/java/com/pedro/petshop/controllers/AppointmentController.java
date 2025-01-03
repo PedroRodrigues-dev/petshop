@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.pedro.petshop.configs.RolesAllowed;
+import com.pedro.petshop.dtos.AppointmentDTO;
 import com.pedro.petshop.entities.Appointment;
+import com.pedro.petshop.mappers.AppointmentMapper;
 import com.pedro.petshop.services.AppointmentService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,9 +31,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 public class AppointmentController {
 
         private final AppointmentService appointmentService;
+        private final AppointmentMapper appointmentMapper;
 
-        public AppointmentController(AppointmentService appointmentService) {
+        public AppointmentController(AppointmentService appointmentService, AppointmentMapper appointmentMapper) {
                 this.appointmentService = appointmentService;
+                this.appointmentMapper = appointmentMapper;
         }
 
         @Operation(summary = "Create a new appointment", description = "Creates a new appointment record in the system")
@@ -40,25 +45,30 @@ public class AppointmentController {
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
         })
+        @RolesAllowed({ "ADMIN" })
         @PostMapping
-        public Appointment createAppointment(@RequestBody Appointment appointment) {
-                return appointmentService.create(appointment);
+        public AppointmentDTO createAppointment(@RequestBody AppointmentDTO appointment) {
+                return appointmentMapper.toDto(appointmentService.create(appointmentMapper.toEntity(appointment)));
         }
 
-        @Operation(summary = "Get appointment by ID", description = "Retrieves a specific appointment by its ID")
+        @Operation(summary = "Get appointment by ID", description = "Retrieves a specific appointment by its ID", parameters = {
+                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Appointment found"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Appointment not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @GetMapping("/{id}")
-        public ResponseEntity<Appointment> getAppointmentById(
+        public ResponseEntity<AppointmentDTO> getAppointmentById(
                         @Parameter(description = "ID of the appointment to be retrieved") @PathVariable Long id) {
                 Optional<Appointment> appointment = appointmentService.findById(id);
 
-                return appointment.map(ResponseEntity::ok)
-                                .orElseGet(() -> ResponseEntity.notFound().build());
+                if (appointment.isPresent())
+                        return ResponseEntity.ok(appointmentMapper.toDto(appointment.get()));
+
+                return ResponseEntity.notFound().build();
         }
 
         @Operation(summary = "Get all appointments", description = "Retrieves all appointment records", parameters = {
@@ -69,12 +79,14 @@ public class AppointmentController {
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
         })
+        @RolesAllowed({ "ADMIN" })
         @GetMapping
-        public Page<Appointment> getAllAppointments(@Parameter(hidden = true) Pageable pageable) {
-                return appointmentService.findAll(pageable);
+        public Page<AppointmentDTO> getAllAppointments(@Parameter(hidden = true) Pageable pageable) {
+                return appointmentMapper.pageToPageDTO(appointmentService.findAll(pageable));
         }
 
-        @Operation(summary = "Update an existing appointment", description = "Updates an existing appointment record")
+        @Operation(summary = "Update an existing appointment", description = "Updates an existing appointment record", parameters = {
+                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Appointment updated successfully"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data"),
@@ -82,20 +94,23 @@ public class AppointmentController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Appointment not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @PutMapping("/{id}")
-        public Appointment updateAppointment(
+        public AppointmentDTO updateAppointment(
                         @Parameter(description = "ID of the appointment to be updated") @PathVariable Long id,
-                        @RequestBody Appointment appointment) {
-                return appointmentService.update(id, appointment);
+                        @RequestBody AppointmentDTO appointment) {
+                return appointmentMapper.toDto(appointmentService.update(id, appointmentMapper.toEntity(appointment)));
         }
 
-        @Operation(summary = "Delete an appointment", description = "Deletes an appointment record by its ID")
+        @Operation(summary = "Delete an appointment", description = "Deletes an appointment record by its ID", parameters = {
+                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Appointment deleted successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Appointment not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @DeleteMapping("/{id}")
         public boolean deleteAppointment(
                         @Parameter(description = "ID of the appointment to be deleted") @PathVariable Long id) {

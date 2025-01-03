@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.pedro.petshop.configs.RolesAllowed;
+import com.pedro.petshop.dtos.ContactDTO;
 import com.pedro.petshop.entities.Contact;
+import com.pedro.petshop.mappers.ContactMapper;
 import com.pedro.petshop.services.ContactService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,9 +31,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 public class ContactController {
 
         private final ContactService contactService;
+        private final ContactMapper contactMapper;
 
-        public ContactController(ContactService contactService) {
+        public ContactController(ContactService contactService, ContactMapper contactMapper) {
                 this.contactService = contactService;
+                this.contactMapper = contactMapper;
         }
 
         @Operation(summary = "Create a new contact", description = "Creates a new contact record for a client")
@@ -40,25 +45,30 @@ public class ContactController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data")
         })
+        @RolesAllowed({ "ADMIN" })
         @PostMapping
-        public Contact createContact(@RequestBody Contact contact) {
-                return contactService.create(contact);
+        public ContactDTO createContact(@RequestBody ContactDTO contact) {
+                return contactMapper.toDto(contactService.create(contactMapper.toEntity(contact)));
         }
 
-        @Operation(summary = "Get contact by ID", description = "Retrieves a specific contact by its ID")
+        @Operation(summary = "Get contact by ID", description = "Retrieves a specific contact by its ID", parameters = {
+                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Contact found"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Contact not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @GetMapping("/{id}")
-        public ResponseEntity<Contact> getContactById(
+        public ResponseEntity<ContactDTO> getContactById(
                         @Parameter(description = "ID of the contact to be retrieved") @PathVariable Long id) {
                 Optional<Contact> contact = contactService.findById(id);
 
-                return contact.map(ResponseEntity::ok)
-                                .orElseGet(() -> ResponseEntity.notFound().build());
+                if (contact.isPresent())
+                        return ResponseEntity.ok(contactMapper.toDto(contact.get()));
+
+                return ResponseEntity.notFound().build();
         }
 
         @Operation(summary = "Get all contacts", description = "Retrieves all contact records", parameters = {
@@ -69,12 +79,14 @@ public class ContactController {
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
         })
+        @RolesAllowed({ "ADMIN" })
         @GetMapping
-        public Page<Contact> getAllContacts(@Parameter(hidden = true) Pageable pageable) {
-                return contactService.findAll(pageable);
+        public Page<ContactDTO> getAllContacts(@Parameter(hidden = true) Pageable pageable) {
+                return contactMapper.pageToPageDTO(contactService.findAll(pageable));
         }
 
-        @Operation(summary = "Update an existing contact", description = "Updates an existing contact record")
+        @Operation(summary = "Update an existing contact", description = "Updates an existing contact record", parameters = {
+                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Contact updated successfully"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data"),
@@ -82,20 +94,23 @@ public class ContactController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Contact not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @PutMapping("/{id}")
-        public Contact updateContact(
+        public ContactDTO updateContact(
                         @Parameter(description = "ID of the contact to be updated") @PathVariable Long id,
-                        @RequestBody Contact contact) {
-                return contactService.update(id, contact);
+                        @RequestBody ContactDTO contact) {
+                return contactMapper.toDto(contactService.update(id, contactMapper.toEntity(contact)));
         }
 
-        @Operation(summary = "Delete a contact", description = "Deletes a contact record by its ID")
+        @Operation(summary = "Delete a contact", description = "Deletes a contact record by its ID", parameters = {
+                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Contact deleted successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Contact not found")
         })
+        @RolesAllowed({ "ADMIN" })
         @DeleteMapping("/{id}")
         public boolean deleteContact(
                         @Parameter(description = "ID of the contact to be deleted") @PathVariable Long id) {

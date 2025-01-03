@@ -21,7 +21,7 @@ public class SeedData {
             if (!userRepository.existsById(adminCpf)) {
                 User admin = new User();
                 admin.setCpf(adminCpf);
-                admin.setName("Admin User");
+                admin.setName("admin");
                 admin.setRole(Role.ADMIN);
                 String hashedPassword = passwordEncoder.encode("admin123");
                 admin.setPassword(hashedPassword);

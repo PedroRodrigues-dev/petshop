@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +18,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import com.pedro.petshop.dtos.AppointmentDTO;
 import com.pedro.petshop.entities.Appointment;
+import com.pedro.petshop.mappers.AppointmentMapper;
 import com.pedro.petshop.services.AppointmentService;
 
 @SpringBootTest
@@ -28,22 +29,27 @@ class AppointmentControllerTest {
     @Autowired
     private AppointmentController appointmentController;
 
+    @Autowired
+    private AppointmentMapper appointmentMapper;
+
     @MockitoBean
     private AppointmentService appointmentService;
 
     @Test
     void testGetAllAppointmentsPaged() {
-        List<Appointment> mockAppointments = Arrays.asList(
-                createAppointment(1L, "Checkup", 100.0),
-                createAppointment(2L, "Vaccination", 50.0));
+        AppointmentDTO appointmentDTO1 = createAppointment(1L, "Checkup", 100.0);
+        AppointmentDTO appointmentDTO2 = createAppointment(2L, "Vaccination", 50.0);
+        Appointment appointment1 = appointmentMapper.toEntity(appointmentDTO1);
+        Appointment appointment2 = appointmentMapper.toEntity(appointmentDTO2);
 
-        Page<Appointment> mockPage = new PageImpl<>(mockAppointments, PageRequest.of(0, 10), mockAppointments.size());
+        Page<Appointment> mockPage = new PageImpl<>(List.of(appointment1, appointment2), PageRequest.of(0, 10),
+                2);
 
         when(appointmentService.findAll(any(Pageable.class))).thenReturn(mockPage);
 
         Pageable pageable = PageRequest.of(0, 10);
 
-        Page<Appointment> result = appointmentController.getAllAppointments(pageable);
+        Page<AppointmentDTO> result = appointmentController.getAllAppointments(pageable);
         assertEquals(2, result.getContent().size());
         assertEquals("Checkup", result.getContent().get(0).getDescription());
         assertEquals("Vaccination", result.getContent().get(1).getDescription());
@@ -55,13 +61,14 @@ class AppointmentControllerTest {
 
     @Test
     void testGetAppointmentById_AppointmentExists() {
-        Appointment mockAppointment = createAppointment(1L, "Checkup", 100.0);
+        AppointmentDTO mockAppointmentDTO = createAppointment(1L, "Checkup", 100.0);
+        Appointment mockAppointment = appointmentMapper.toEntity(mockAppointmentDTO);
         when(appointmentService.findById(1L)).thenReturn(Optional.of(mockAppointment));
 
-        ResponseEntity<Appointment> response = appointmentController.getAppointmentById(1L);
+        ResponseEntity<AppointmentDTO> response = appointmentController.getAppointmentById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        Appointment body = Optional.ofNullable(response.getBody())
+        AppointmentDTO body = Optional.ofNullable(response.getBody())
                 .orElseThrow(() -> new AssertionError("Response body should not be null"));
         assertEquals("Checkup", body.getDescription());
     }
@@ -70,19 +77,20 @@ class AppointmentControllerTest {
     void testGetAppointmentById_AppointmentNotFound() {
         when(appointmentService.findById(1L)).thenReturn(Optional.empty());
 
-        ResponseEntity<Appointment> response = appointmentController.getAppointmentById(1L);
+        ResponseEntity<AppointmentDTO> response = appointmentController.getAppointmentById(1L);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
     void testCreateAppointment() {
-        Appointment mockAppointment = createAppointment(null, "Checkup", 100.0);
+        AppointmentDTO mockAppointmentDTO = createAppointment(null, "Checkup", 100.0);
+        Appointment mockAppointment = appointmentMapper.toEntity(mockAppointmentDTO);
         when(appointmentService.create(any(Appointment.class))).thenReturn(mockAppointment);
 
-        Appointment appointmentToCreate = createAppointment(null, "Checkup", 100.0);
+        AppointmentDTO appointmentToCreate = createAppointment(null, "Checkup", 100.0);
 
-        Appointment result = appointmentController.createAppointment(appointmentToCreate);
+        AppointmentDTO result = appointmentController.createAppointment(appointmentToCreate);
 
         assertEquals("Checkup", result.getDescription());
         assertEquals(100.0, result.getCost());
@@ -90,12 +98,13 @@ class AppointmentControllerTest {
 
     @Test
     void testUpdateAppointment() {
-        Appointment mockAppointment = createAppointment(1L, "Updated Checkup", 120.0);
+        AppointmentDTO mockAppointmentDTO = createAppointment(1L, "Updated Checkup", 120.0);
+        Appointment mockAppointment = appointmentMapper.toEntity(mockAppointmentDTO);
         when(appointmentService.update(any(Long.class), any(Appointment.class))).thenReturn(mockAppointment);
 
-        Appointment appointmentToUpdate = createAppointment(1L, "Updated Checkup", 120.0);
+        AppointmentDTO appointmentToUpdate = createAppointment(1L, "Updated Checkup", 120.0);
 
-        Appointment result = appointmentController.updateAppointment(1L, appointmentToUpdate);
+        AppointmentDTO result = appointmentController.updateAppointment(1L, appointmentToUpdate);
 
         assertEquals("Updated Checkup", result.getDescription());
         assertEquals(120.0, result.getCost());
@@ -110,13 +119,13 @@ class AppointmentControllerTest {
         assertEquals(true, result);
     }
 
-    private Appointment createAppointment(Long id, String description, Double cost) {
-        Appointment appointment = new Appointment();
+    private AppointmentDTO createAppointment(Long id, String description, Double cost) {
+        AppointmentDTO appointment = new AppointmentDTO();
         appointment.setId(id);
         appointment.setDescription(description);
         appointment.setCost(cost);
-        appointment.setDate(null); // set the date as null for now
-        appointment.setPet(null); // set the pet as null for now
+        appointment.setDate(null);
+        appointment.setPetId(null);
         return appointment;
     }
 }

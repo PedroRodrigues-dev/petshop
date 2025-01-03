@@ -17,7 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import com.pedro.petshop.dtos.AddressDTO;
 import com.pedro.petshop.entities.Address;
+import com.pedro.petshop.mappers.AddressMapper;
 import com.pedro.petshop.services.AddressService;
 
 @SpringBootTest
@@ -26,15 +28,19 @@ class AddressControllerTest {
     @Autowired
     private AddressController addressController;
 
+    @Autowired
+    private AddressMapper addressMapper;
+
     @MockitoBean
     private AddressService addressService;
 
     @Test
     void testCreateAddress() {
-        Address address = createAddress(1L, "Street 123", "City1", "Neighborhood1", "Apt 101", "Home");
-        when(addressService.create(any(Address.class))).thenReturn(address);
+        AddressDTO addressDTO = createAddress(1L, "Street 123", "City1", "Neighborhood1", "Apt 101", "Home");
+        Address address = addressMapper.toEntity(addressDTO);
+        when(addressService.create(address)).thenReturn(address);
 
-        Address result = addressController.createAddress(address);
+        AddressDTO result = addressController.createAddress(addressDTO);
 
         assertEquals("Street 123", result.getStreet());
         assertEquals("City1", result.getCity());
@@ -45,13 +51,14 @@ class AddressControllerTest {
 
     @Test
     void testGetAddressById_AddressExists() {
-        Address address = createAddress(1L, "Street 123", "City1", "Neighborhood1", "Apt 101", "Home");
+        AddressDTO addressDTO = createAddress(1L, "Street 123", "City1", "Neighborhood1", "Apt 101", "Home");
+        Address address = addressMapper.toEntity(addressDTO);
         when(addressService.findById(1L)).thenReturn(Optional.of(address));
 
-        ResponseEntity<Address> response = addressController.getAddressById(1L);
+        ResponseEntity<AddressDTO> response = addressController.getAddressById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        Address body = Optional.ofNullable(response.getBody())
+        AddressDTO body = Optional.ofNullable(response.getBody())
                 .orElseThrow(() -> new AssertionError("Response body should not be null"));
         assertEquals("Street 123", body.getStreet());
     }
@@ -60,20 +67,22 @@ class AddressControllerTest {
     void testGetAddressById_AddressNotFound() {
         when(addressService.findById(1L)).thenReturn(Optional.empty());
 
-        ResponseEntity<Address> response = addressController.getAddressById(1L);
+        ResponseEntity<AddressDTO> response = addressController.getAddressById(1L);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
     void testGetAllAddresses() {
-        Address address1 = createAddress(1L, "Street 123", "City1", "Neighborhood1", "Apt 101", "Home");
-        Address address2 = createAddress(2L, "Street 456", "City2", "Neighborhood2", "Apt 202", "Work");
+        AddressDTO addressDTO1 = createAddress(1L, "Street 123", "City1", "Neighborhood1", "Apt 101", "Home");
+        AddressDTO addressDTO2 = createAddress(2L, "Street 456", "City2", "Neighborhood2", "Apt 202", "Work");
+        Address address1 = addressMapper.toEntity(addressDTO1);
+        Address address2 = addressMapper.toEntity(addressDTO2);
         Page<Address> mockPage = new PageImpl<>(List.of(address1, address2), PageRequest.of(0, 10), 2);
 
         when(addressService.findAll(any())).thenReturn(mockPage);
 
-        Page<Address> result = addressController.getAllAddresses(PageRequest.of(0, 10));
+        Page<AddressDTO> result = addressController.getAllAddresses(PageRequest.of(0, 10));
 
         assertEquals(2, result.getContent().size());
         assertEquals("Street 123", result.getContent().get(0).getStreet());
@@ -82,10 +91,12 @@ class AddressControllerTest {
 
     @Test
     void testUpdateAddress() {
-        Address updatedAddress = createAddress(1L, "Street 123", "City1", "Neighborhood1", "Apt 102", "Work");
+        AddressDTO updatedAddressDTO = createAddress(1L, "Street 123", "City1", "Neighborhood1", "Apt 102", "Work");
+        Address updatedAddress = addressMapper.toEntity(updatedAddressDTO);
+
         when(addressService.update(1L, updatedAddress)).thenReturn(updatedAddress);
 
-        Address result = addressController.updateAddress(1L, updatedAddress);
+        AddressDTO result = addressController.updateAddress(1L, updatedAddressDTO);
 
         assertEquals("Apt 102", result.getComplement());
         assertEquals("Work", result.getTag());
@@ -100,9 +111,9 @@ class AddressControllerTest {
         assertEquals(true, result);
     }
 
-    private Address createAddress(Long id, String street, String city, String neighborhood, String complement,
+    private AddressDTO createAddress(Long id, String street, String city, String neighborhood, String complement,
             String tag) {
-        Address address = new Address();
+        AddressDTO address = new AddressDTO();
         address.setId(id);
         address.setStreet(street);
         address.setCity(city);

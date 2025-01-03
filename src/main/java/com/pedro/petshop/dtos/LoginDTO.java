@@ -1,9 +1,9 @@
-package com.pedro.petshop.entities;
+package com.pedro.petshop.dtos;
 
 import lombok.Data;
 
 @Data
-public class Login {
+public class LoginDTO {
     private String name;
     private String password;
 }

@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pedro.petshop.configs.JwtUtil;
-import com.pedro.petshop.entities.Login;
-import com.pedro.petshop.entities.Token;
+import com.pedro.petshop.dtos.LoginDTO;
+import com.pedro.petshop.dtos.RegisterDTO;
+import com.pedro.petshop.dtos.TokenDTO;
 import com.pedro.petshop.entities.User;
+import com.pedro.petshop.mappers.UserMapper;
 import com.pedro.petshop.services.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,6 +28,9 @@ public class AuthController {
     private UserService userService;
 
     @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
     private JwtUtil jwtUtil;
 
     @Operation(summary = "Register", description = "Register in the system")
@@ -36,14 +41,15 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody User user) {
-        String result = userService.registerUser(user);
+    public HttpStatus register(@RequestBody RegisterDTO register) {
+        User user = userMapper.registerToUser(register);
+        Boolean isRegistered = userService.registerUser(user);
 
-        if (result.equals("Usuário já existe.")) {
-            return ResponseEntity.badRequest().body(result);
+        if (!isRegistered) {
+            return HttpStatus.BAD_REQUEST;
         }
 
-        return ResponseEntity.ok(result);
+        return HttpStatus.OK;
     }
 
     @Operation(summary = "Login", description = "Login in the system")
@@ -54,7 +60,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     @PostMapping("/login")
-    public ResponseEntity<Token> login(@RequestBody Login loginUser) {
+    public ResponseEntity<TokenDTO> login(@RequestBody LoginDTO loginUser) {
         Boolean isLoggged = userService.loginUser(loginUser);
 
         if (!isLoggged) {
@@ -62,7 +68,7 @@ public class AuthController {
         }
 
         String token = jwtUtil.generateToken(loginUser.getName());
-        Token tokenObject = new Token();
+        TokenDTO tokenObject = new TokenDTO();
         tokenObject.setToken("Bearer " + token);
 
         return ResponseEntity.ok(tokenObject);

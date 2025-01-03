@@ -8,7 +8,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.pedro.petshop.entities.Login;
+import com.pedro.petshop.dtos.LoginDTO;
 import com.pedro.petshop.entities.User;
 import com.pedro.petshop.enums.Role;
 import com.pedro.petshop.repositories.UserRepository;
@@ -56,9 +56,9 @@ public class UserService {
         return false;
     }
 
-    public String registerUser(User user) {
+    public Boolean registerUser(User user) {
         if (userRepository.existsById(user.getCpf())) {
-            return "Usuário já existe.";
+            return false;
         }
 
         user.setRole(Role.CLIENT);
@@ -67,10 +67,10 @@ public class UserService {
         user.setPassword(hashedPassword);
 
         userRepository.save(user);
-        return "Usuário registrado com sucesso.";
+        return true;
     }
 
-    public Boolean loginUser(Login loginUser) {
+    public Boolean loginUser(LoginDTO loginUser) {
         Optional<User> userOptional = userRepository.findByName(loginUser.getName());
 
         if (userOptional.isEmpty()) {
