@@ -1,0 +1,19 @@
+{
+  "properties": [
+    {
+      "name": "cors.allowed-origin",
+      "type": "java.lang.String",
+      "description": "Define the allowed origin for CORS configuration."
+    },
+    {
+      "name": "jwt.secret-key",
+      "type": "java.lang.String",
+      "description": "Define the secret key for JWT configuration."
+    },
+    {
+      "name": "upload.path",
+      "type": "java.lang.String",
+      "description": "Define the path for the file uploaders."
+    }
+  ]
+}

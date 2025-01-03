@@ -1,0 +1,17 @@
+name: petshop-prod
+
+services:
+  petshop:
+    image: petshop:1.0.0
+    container_name: petshop
+    environment:
+      - DB_URL=jdbc:postgresql://localhost:5432/petshop
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - ALLOWED_ORIGIN=*
+      - JWT_KEY=SuaChaveSecretaMuitoSeguraParaJWT
+      - UPLOAD_DIR=~/Documentos/petshop/uploads
+    ports:
+      - "8080:8080"
+    restart: always
+    network_mode: host
