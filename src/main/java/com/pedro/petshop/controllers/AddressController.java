@@ -51,8 +51,7 @@ public class AddressController {
                 return addressMapper.toDto(addressService.create(addressMapper.toEntity(address)));
         }
 
-        @Operation(summary = "Get address by ID", description = "Retrieves a specific address by its ID", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Get address by ID", description = "Retrieves a specific address by its ID")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Address found"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -62,7 +61,7 @@ public class AddressController {
         @RolesAllowed({ "ADMIN" })
         @GetMapping("/{id}")
         public ResponseEntity<AddressDTO> getAddressById(
-                        @Parameter(description = "ID of the address to be retrieved") @PathVariable Long id) {
+                        @Parameter(description = "ID of the address to be retrieved") @PathVariable("id") Long id) {
                 Optional<Address> address = addressService.findById(id);
 
                 if (address.isPresent())
@@ -85,8 +84,7 @@ public class AddressController {
                 return addressMapper.pageToPageDTO(addressService.findAll(pageable));
         }
 
-        @Operation(summary = "Update an existing address", description = "Updates an existing address record", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Update an existing address", description = "Updates an existing address record")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Address updated successfully"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data"),
@@ -97,13 +95,12 @@ public class AddressController {
         @RolesAllowed({ "ADMIN" })
         @PutMapping("/{id}")
         public AddressDTO updateAddress(
-                        @Parameter(description = "ID of the address to be updated") @PathVariable Long id,
+                        @Parameter(description = "ID of the address to be updated") @PathVariable("id") Long id,
                         @RequestBody AddressDTO address) {
                 return addressMapper.toDto(addressService.update(id, addressMapper.toEntity(address)));
         }
 
-        @Operation(summary = "Delete an address", description = "Deletes an address record by its ID", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Delete an address", description = "Deletes an address record by its ID")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Address deleted successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -113,7 +110,7 @@ public class AddressController {
         @RolesAllowed({ "ADMIN" })
         @DeleteMapping("/{id}")
         public boolean deleteAddress(
-                        @Parameter(description = "ID of the address to be deleted") @PathVariable Long id) {
+                        @Parameter(description = "ID of the address to be deleted") @PathVariable("id") Long id) {
                 return addressService.delete(id);
         }
 }

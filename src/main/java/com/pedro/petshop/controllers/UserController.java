@@ -51,8 +51,7 @@ public class UserController {
                 return userMapper.toDto(userService.create(userMapper.toEntity(user)));
         }
 
-        @Operation(summary = "Get user by CPF", description = "Retrieves a specific user by their CPF", parameters = {
-                        @Parameter(name = "cpf", description = "CPF number", in = ParameterIn.PATH, example = "12345678900") })
+        @Operation(summary = "Get user by CPF", description = "Retrieves a specific user by their CPF")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "User found"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -85,8 +84,7 @@ public class UserController {
                 return userMapper.pageToPageDTO(userService.findAll(pageable));
         }
 
-        @Operation(summary = "Update an existing user", description = "Updates an existing user's details", parameters = {
-                        @Parameter(name = "cpf", description = "CPF number", in = ParameterIn.PATH, example = "12345678900") })
+        @Operation(summary = "Update an existing user", description = "Updates an existing user's details")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "User updated successfully"),
                         @ApiResponse(responseCode = "400", description = "Invalid user input data"),
@@ -102,8 +100,7 @@ public class UserController {
                 return userMapper.toDto(userService.update(cpf, userMapper.toEntity(user)));
         }
 
-        @Operation(summary = "Delete a user", description = "Deletes a user record by their CPF", parameters = {
-                        @Parameter(name = "cpf", description = "CPF number", in = ParameterIn.PATH, example = "12345678900") })
+        @Operation(summary = "Delete a user", description = "Deletes a user record by their CPF")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "User deleted successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),

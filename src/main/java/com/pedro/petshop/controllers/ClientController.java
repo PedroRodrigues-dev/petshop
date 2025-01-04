@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,8 +44,7 @@ public class ClientController {
                 this.clientMapper = clientMapper;
         }
 
-        @Operation(summary = "Upload a client image", description = "Upload a client image in the system", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Upload a client image", description = "Upload a client image in the system")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Image uploaded successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -53,9 +52,9 @@ public class ClientController {
                         @ApiResponse(responseCode = "500", description = "Internal server error")
         })
         @RolesAllowed({ "ADMIN" })
-        @PostMapping("/{id}/upload-image")
-        public HttpStatus uploadProfileImage(@PathVariable Long id,
-                        @RequestParam("file") MultipartFile file) {
+        @PostMapping(value = "/{id}/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public HttpStatus uploadProfileImage(@PathVariable("id") Long id,
+                        @RequestPart(value = "file", required = true) MultipartFile file) {
                 boolean isSaved = clientService.uploadImage(id, file);
                 if (isSaved)
                         return HttpStatus.OK;
@@ -63,8 +62,7 @@ public class ClientController {
                 return HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
-        @Operation(summary = "Download a client image", description = "Download a client image from the system", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Download a client image", description = "Download a client image from the system")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Image downloaded successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -73,7 +71,7 @@ public class ClientController {
         })
         @RolesAllowed({ "ADMIN" })
         @GetMapping("/{id}/download-image")
-        public ResponseEntity<Resource> getProfileImage(@PathVariable Long id) {
+        public ResponseEntity<Resource> getProfileImage(@PathVariable("id") Long id) {
                 Optional<Resource> resource = clientService.getProfileImage(id);
                 if (!resource.isPresent())
                         return ResponseEntity.notFound().build();
@@ -98,8 +96,7 @@ public class ClientController {
                 return clientMapper.toDto(clientService.create(clientMapper.toEntity(client)));
         }
 
-        @Operation(summary = "Get client by ID", description = "Retrieves a specific client by its ID", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Get client by ID", description = "Retrieves a specific client by its ID")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Client found"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -108,7 +105,7 @@ public class ClientController {
         })
         @RolesAllowed({ "ADMIN" })
         @GetMapping("/{id}")
-        public ResponseEntity<ClientDTO> getClientById(@PathVariable Long id) {
+        public ResponseEntity<ClientDTO> getClientById(@PathVariable("id") Long id) {
                 Optional<Client> client = clientService.findById(id);
 
                 if (client.isPresent())
@@ -131,8 +128,7 @@ public class ClientController {
                 return clientMapper.pageToPageDTO(clientService.findAll(pageable));
         }
 
-        @Operation(summary = "Update an existing client", description = "Updates an existing client record", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Update an existing client", description = "Updates an existing client record")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Client updated successfully"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data"),
@@ -143,13 +139,12 @@ public class ClientController {
         @RolesAllowed({ "ADMIN" })
         @PutMapping("/{id}")
         public ClientDTO updateClient(
-                        @Parameter(description = "ID of the client to be updated") @PathVariable Long id,
+                        @Parameter(description = "ID of the client to be updated") @PathVariable("id") Long id,
                         @RequestBody ClientDTO client) {
                 return clientMapper.toDto(clientService.update(id, clientMapper.toEntity(client)));
         }
 
-        @Operation(summary = "Delete a client", description = "Deletes a client record by its ID", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Delete a client", description = "Deletes a client record by its ID")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Client deleted successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -158,7 +153,8 @@ public class ClientController {
         })
         @RolesAllowed({ "ADMIN" })
         @DeleteMapping("/{id}")
-        public boolean deleteClient(@Parameter(description = "ID of the client to be deleted") @PathVariable Long id) {
+        public boolean deleteClient(
+                        @Parameter(description = "ID of the client to be deleted") @PathVariable("id") Long id) {
                 return clientService.delete(id);
         }
 }

@@ -51,8 +51,7 @@ public class AppointmentController {
                 return appointmentMapper.toDto(appointmentService.create(appointmentMapper.toEntity(appointment)));
         }
 
-        @Operation(summary = "Get appointment by ID", description = "Retrieves a specific appointment by its ID", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Get appointment by ID", description = "Retrieves a specific appointment by its ID")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Appointment found"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -62,7 +61,7 @@ public class AppointmentController {
         @RolesAllowed({ "ADMIN" })
         @GetMapping("/{id}")
         public ResponseEntity<AppointmentDTO> getAppointmentById(
-                        @Parameter(description = "ID of the appointment to be retrieved") @PathVariable Long id) {
+                        @Parameter(description = "ID of the appointment to be retrieved") @PathVariable("id") Long id) {
                 Optional<Appointment> appointment = appointmentService.findById(id);
 
                 if (appointment.isPresent())
@@ -85,8 +84,7 @@ public class AppointmentController {
                 return appointmentMapper.pageToPageDTO(appointmentService.findAll(pageable));
         }
 
-        @Operation(summary = "Update an existing appointment", description = "Updates an existing appointment record", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Update an existing appointment", description = "Updates an existing appointment record")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Appointment updated successfully"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data"),
@@ -97,13 +95,12 @@ public class AppointmentController {
         @RolesAllowed({ "ADMIN" })
         @PutMapping("/{id}")
         public AppointmentDTO updateAppointment(
-                        @Parameter(description = "ID of the appointment to be updated") @PathVariable Long id,
+                        @Parameter(description = "ID of the appointment to be updated") @PathVariable("id") Long id,
                         @RequestBody AppointmentDTO appointment) {
                 return appointmentMapper.toDto(appointmentService.update(id, appointmentMapper.toEntity(appointment)));
         }
 
-        @Operation(summary = "Delete an appointment", description = "Deletes an appointment record by its ID", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Delete an appointment", description = "Deletes an appointment record by its ID")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Appointment deleted successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -113,7 +110,7 @@ public class AppointmentController {
         @RolesAllowed({ "ADMIN" })
         @DeleteMapping("/{id}")
         public boolean deleteAppointment(
-                        @Parameter(description = "ID of the appointment to be deleted") @PathVariable Long id) {
+                        @Parameter(description = "ID of the appointment to be deleted") @PathVariable("id") Long id) {
                 return appointmentService.delete(id);
         }
 }

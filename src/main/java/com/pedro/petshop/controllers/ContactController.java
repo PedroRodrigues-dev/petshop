@@ -51,8 +51,7 @@ public class ContactController {
                 return contactMapper.toDto(contactService.create(contactMapper.toEntity(contact)));
         }
 
-        @Operation(summary = "Get contact by ID", description = "Retrieves a specific contact by its ID", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Get contact by ID", description = "Retrieves a specific contact by its ID")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Contact found"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -62,7 +61,7 @@ public class ContactController {
         @RolesAllowed({ "ADMIN" })
         @GetMapping("/{id}")
         public ResponseEntity<ContactDTO> getContactById(
-                        @Parameter(description = "ID of the contact to be retrieved") @PathVariable Long id) {
+                        @Parameter(description = "ID of the contact to be retrieved") @PathVariable("id") Long id) {
                 Optional<Contact> contact = contactService.findById(id);
 
                 if (contact.isPresent())
@@ -85,8 +84,7 @@ public class ContactController {
                 return contactMapper.pageToPageDTO(contactService.findAll(pageable));
         }
 
-        @Operation(summary = "Update an existing contact", description = "Updates an existing contact record", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Update an existing contact", description = "Updates an existing contact record")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Contact updated successfully"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data"),
@@ -97,13 +95,12 @@ public class ContactController {
         @RolesAllowed({ "ADMIN" })
         @PutMapping("/{id}")
         public ContactDTO updateContact(
-                        @Parameter(description = "ID of the contact to be updated") @PathVariable Long id,
+                        @Parameter(description = "ID of the contact to be updated") @PathVariable("id") Long id,
                         @RequestBody ContactDTO contact) {
                 return contactMapper.toDto(contactService.update(id, contactMapper.toEntity(contact)));
         }
 
-        @Operation(summary = "Delete a contact", description = "Deletes a contact record by its ID", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Delete a contact", description = "Deletes a contact record by its ID")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Contact deleted successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -113,7 +110,7 @@ public class ContactController {
         @RolesAllowed({ "ADMIN" })
         @DeleteMapping("/{id}")
         public boolean deleteContact(
-                        @Parameter(description = "ID of the contact to be deleted") @PathVariable Long id) {
+                        @Parameter(description = "ID of the contact to be deleted") @PathVariable("id") Long id) {
                 return contactService.delete(id);
         }
 }

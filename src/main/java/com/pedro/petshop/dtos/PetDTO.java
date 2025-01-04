@@ -9,7 +9,6 @@ public class PetDTO {
     private Long id;
     private Long clientId;
     private Long breedId;
-    private String image;
     private String name;
     private LocalDate birthDate;
 }

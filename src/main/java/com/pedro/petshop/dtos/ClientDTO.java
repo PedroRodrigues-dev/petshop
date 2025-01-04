@@ -9,6 +9,5 @@ public class ClientDTO {
     private Long id;
     private String name;
     private String cpf;
-    private String image;
     private LocalDateTime registrationDate;
 }

@@ -51,8 +51,7 @@ public class BreedController {
                 return breedMapper.toDto(breedService.create(breedMapper.toEntity(breed)));
         }
 
-        @Operation(summary = "Get breed by ID", description = "Retrieves a specific breed by its ID", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Get breed by ID", description = "Retrieves a specific breed by its ID")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Breed found"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -62,7 +61,7 @@ public class BreedController {
         @RolesAllowed({ "ADMIN" })
         @GetMapping("/{id}")
         public ResponseEntity<BreedDTO> getBreedById(
-                        @Parameter(description = "ID of the breed to be retrieved") @PathVariable Long id) {
+                        @Parameter(description = "ID of the breed to be retrieved") @PathVariable("id") Long id) {
                 Optional<Breed> breed = breedService.findById(id);
 
                 if (breed.isPresent())
@@ -85,8 +84,7 @@ public class BreedController {
                 return breedMapper.pageToPageDTO(breedService.findAll(pageable));
         }
 
-        @Operation(summary = "Update an existing breed", description = "Updates an existing breed record", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Update an existing breed", description = "Updates an existing breed record")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Breed updated successfully"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data"),
@@ -97,13 +95,12 @@ public class BreedController {
         @RolesAllowed({ "ADMIN" })
         @PutMapping("/{id}")
         public BreedDTO updateBreed(
-                        @Parameter(description = "ID of the breed to be updated") @PathVariable Long id,
+                        @Parameter(description = "ID of the breed to be updated") @PathVariable("id") Long id,
                         @RequestBody BreedDTO breed) {
                 return breedMapper.toDto(breedService.update(id, breedMapper.toEntity(breed)));
         }
 
-        @Operation(summary = "Delete a breed", description = "Deletes a breed record by its ID", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Delete a breed", description = "Deletes a breed record by its ID")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Breed deleted successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -112,7 +109,8 @@ public class BreedController {
         })
         @RolesAllowed({ "ADMIN" })
         @DeleteMapping("/{id}")
-        public boolean deleteBreed(@Parameter(description = "ID of the breed to be deleted") @PathVariable Long id) {
+        public boolean deleteBreed(
+                        @Parameter(description = "ID of the breed to be deleted") @PathVariable("id") Long id) {
                 return breedService.delete(id);
         }
 }

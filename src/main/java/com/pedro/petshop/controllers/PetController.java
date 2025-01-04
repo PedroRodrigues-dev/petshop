@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,8 +44,7 @@ public class PetController {
                 this.petMapper = petMapper;
         }
 
-        @Operation(summary = "Upload a pet image", description = "Upload a pet image in the system", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Upload a pet image", description = "Upload a pet image in the system")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Image uploaded successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -53,9 +52,9 @@ public class PetController {
                         @ApiResponse(responseCode = "500", description = "Internal server error")
         })
         @RolesAllowed({ "ADMIN" })
-        @PostMapping("/{id}/upload-image")
-        public HttpStatus uploadProfileImage(@PathVariable Long id,
-                        @RequestParam("file") MultipartFile file) {
+        @PostMapping(value = "/{id}/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public HttpStatus uploadProfileImage(@PathVariable("id") Long id,
+                        @RequestPart(value = "file", required = true) MultipartFile file) {
                 boolean isSaved = petService.uploadImage(id, file);
                 if (isSaved)
                         return HttpStatus.OK;
@@ -63,8 +62,7 @@ public class PetController {
                 return HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
-        @Operation(summary = "Download a pet image", description = "Download a pet image from the system", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Download a pet image", description = "Download a pet image from the system")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Image downloaded successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -73,7 +71,7 @@ public class PetController {
         })
         @RolesAllowed({ "ADMIN" })
         @GetMapping("/{id}/download-image")
-        public ResponseEntity<Resource> getProfileImage(@PathVariable Long id) {
+        public ResponseEntity<Resource> getProfileImage(@PathVariable("id") Long id) {
                 Optional<Resource> resource = petService.getProfileImage(id);
                 if (!resource.isPresent())
                         return ResponseEntity.notFound().build();
@@ -98,8 +96,7 @@ public class PetController {
                 return petMapper.toDto(petService.create(petMapper.toEntity(pet)));
         }
 
-        @Operation(summary = "Get pet by ID", description = "Retrieves a specific pet by its ID", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Get pet by ID", description = "Retrieves a specific pet by its ID")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Pet found"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -109,7 +106,7 @@ public class PetController {
         @RolesAllowed({ "ADMIN" })
         @GetMapping("/{id}")
         public ResponseEntity<PetDTO> getPetById(
-                        @Parameter(description = "ID of the pet to be retrieved") @PathVariable Long id) {
+                        @Parameter(description = "ID of the pet to be retrieved") @PathVariable("id") Long id) {
                 Optional<Pet> pet = petService.findById(id);
 
                 if (pet.isPresent())
@@ -132,8 +129,7 @@ public class PetController {
                 return petMapper.pageToPageDTO(petService.findAll(pageable));
         }
 
-        @Operation(summary = "Update an existing pet", description = "Updates an existing pet record", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Update an existing pet", description = "Updates an existing pet record")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Pet updated successfully"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data"),
@@ -144,13 +140,12 @@ public class PetController {
         @RolesAllowed({ "ADMIN" })
         @PutMapping("/{id}")
         public PetDTO updatePet(
-                        @Parameter(description = "ID of the pet to be updated") @PathVariable Long id,
+                        @Parameter(description = "ID of the pet to be updated") @PathVariable("id") Long id,
                         @RequestBody PetDTO pet) {
                 return petMapper.toDto(petService.update(id, petMapper.toEntity(pet)));
         }
 
-        @Operation(summary = "Delete a pet", description = "Deletes a pet record by its ID", parameters = {
-                        @Parameter(name = "id", description = "ID number", in = ParameterIn.PATH, example = "1") })
+        @Operation(summary = "Delete a pet", description = "Deletes a pet record by its ID")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Pet deleted successfully"),
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -159,7 +154,7 @@ public class PetController {
         })
         @RolesAllowed({ "ADMIN" })
         @DeleteMapping("/{id}")
-        public boolean deletePet(@Parameter(description = "ID of the pet to be deleted") @PathVariable Long id) {
+        public boolean deletePet(@Parameter(description = "ID of the pet to be deleted") @PathVariable("id") Long id) {
                 return petService.delete(id);
         }
 }
