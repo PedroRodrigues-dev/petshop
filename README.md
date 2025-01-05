@@ -214,4 +214,5 @@ Para simplificação, preparei um arquivo `launch.json` para usuários de **VSCo
 - **(Concluído)** Implementei as roles de acesso.
 - **(Concluído)** Implementei o swagger para documentação.
 - **(Concluído)** Implementei as métricas com actuator.
+- **(Concluído)** Integrei com o prometheus e grafana.
 - **(Concluído)** Implementei o deploy da aplicação com docker.
