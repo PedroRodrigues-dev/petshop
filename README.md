@@ -99,6 +99,11 @@ Esse modelo segue a lógica de acesso mencionada, garantindo que administradores
 
 ---
 
+### Prometheus e Grafana
+
+Para trabalhar com as métricas trabalhei com estas ferramentas, não consegui implementar com containers docker devido a um problema no dockerhub então
+instalei nativamente em minha maquina e disponibilizei neste repositório o arquivo `prometheus.yml` com minha configuração completa do prometheus.
+
 ### Quanto ao frontend
 
 Devido ao pouco tempo não foi desenvolvido mas o objetivo seria um frontend básico baseado em outros sistemas do gênero, deve ser possível cadastrar
