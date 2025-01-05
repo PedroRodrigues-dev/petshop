@@ -3,6 +3,7 @@ package com.pedro.petshop.controllers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -213,13 +214,38 @@ class PetControllerTest {
 
         CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
         when(customAuthentication.getCpf()).thenReturn("12345678900");
-        when(customAuthentication.getRole()).thenReturn(Role.CLIENT.toString());
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
         SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
         when(petService.findAll(any(Pageable.class))).thenReturn(mockPage);
 
         Pageable pageable = PageRequest.of(0, 10);
         Page<PetDTO> result = petController.getAllPets(pageable);
+
+        assertEquals(2, result.getContent().size());
+        assertEquals("Buddy", result.getContent().get(0).getName());
+        assertEquals("Bella", result.getContent().get(1).getName());
+    }
+
+    @Test
+    void testGetPetsByClientId() {
+        PetDTO petDTO1 = createPet(1L, "Buddy", LocalDate.of(2020, 5, 15));
+        PetDTO petDTO2 = createPet(2L, "Bella", LocalDate.of(2019, 8, 12));
+        Pet pet1 = petMapper.toEntity(petDTO1);
+        Pet pet2 = petMapper.toEntity(petDTO2);
+
+        Page<Pet> mockPage = new PageImpl<>(List.of(pet1, pet2), PageRequest.of(0,
+                10), 2);
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
+
+        when(petService.findAllByClientId(eq(1L), any())).thenReturn(mockPage);
+
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<PetDTO> result = petController.getPetsByClientId(1L, pageable);
 
         assertEquals(2, result.getContent().size());
         assertEquals("Buddy", result.getContent().get(0).getName());

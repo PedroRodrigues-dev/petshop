@@ -53,7 +53,7 @@ public class AddressController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data")
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @PostMapping
         public ResponseEntity<AddressDTO> createAddress(@RequestBody AddressDTO address) {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -80,7 +80,7 @@ public class AddressController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Address not found")
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @GetMapping("/{id}")
         public ResponseEntity<AddressDTO> getAddressById(
                         @Parameter(description = "ID of the address to be retrieved") @PathVariable("id") Long id) {
@@ -114,7 +114,7 @@ public class AddressController {
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @GetMapping
         public Page<AddressDTO> getAllAddresses(@Parameter(hidden = true) Pageable pageable) {
                 Page<Address> address = null;
@@ -127,10 +127,40 @@ public class AddressController {
                         String cpf = customAuth.getCpf();
 
                         if (role.equals(Role.CLIENT.toString()))
-                                address = addressService.findAll(pageable);
-                        if (role.equals(Role.ADMIN.toString()))
                                 address = addressService.getAllByUserCpf(cpf, pageable);
+                        if (role.equals(Role.ADMIN.toString()))
+                                address = addressService.findAll(pageable);
+                }
 
+                return addressMapper.pageToPageDTO(address);
+        }
+
+        @Operation(summary = "Get addresses by clientId", description = "Retrieves address by clientId records", parameters = {
+                        @Parameter(name = "page", description = "Page number (0-based index)", in = ParameterIn.QUERY, example = "0"),
+                        @Parameter(name = "size", description = "Number of items per page", in = ParameterIn.QUERY, example = "10")
+        })
+        @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of addressesreturned"),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @ApiResponse(responseCode = "403", description = "Forbidden"), })
+
+        @RolesAllowed({ "ADMIN", "CLIENT" })
+        @GetMapping("/client/{clientId}")
+        public Page<AddressDTO> getAddressesByClientId(@PathVariable("clientId") Long clientId,
+                        @Parameter(hidden = true) Pageable pageable) {
+                Page<Address> address = null;
+
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString()))
+                                address = addressService.findAllByClientIdAndUserCpf(clientId, cpf,
+                                                pageable);
+                        if (role.equals(Role.ADMIN.toString()))
+                                address = addressService.findAllByClientId(clientId, pageable);
                 }
 
                 return addressMapper.pageToPageDTO(address);
@@ -144,7 +174,7 @@ public class AddressController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Address not found")
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @PutMapping("/{id}")
         public AddressDTO updateAddress(
                         @Parameter(description = "ID of the address to be updated") @PathVariable("id") Long id,
@@ -176,7 +206,7 @@ public class AddressController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Address not found")
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @DeleteMapping("/{id}")
         public boolean deleteAddress(
                         @Parameter(description = "ID of the address to be deleted") @PathVariable("id") Long id) {

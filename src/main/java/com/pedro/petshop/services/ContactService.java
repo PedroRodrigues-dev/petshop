@@ -30,6 +30,16 @@ public class ContactService {
         return contactRepository.findAll(pageable);
     }
 
+    public Page<Contact> findAllByClientId(Long clientId, Pageable pageable) {
+        return contactRepository.findAllByClientId(clientId, pageable);
+    }
+
+    public Page<Contact> findAllByClientIdAndUserCpf(Long clientId, String cpf,
+            Pageable pageable) {
+        return contactRepository.findAllByClientIdAndUserCpf(clientId, cpf,
+                pageable);
+    }
+
     public Contact update(Long id, Contact contact) {
         if (contactRepository.existsById(id)) {
             return contactRepository.save(contact);

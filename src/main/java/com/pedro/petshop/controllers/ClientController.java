@@ -188,10 +188,9 @@ public class ClientController {
                         String cpf = customAuth.getCpf();
 
                         if (role.equals(Role.CLIENT.toString()))
-                                clients = clientService.findAll(pageable);
-                        if (role.equals(Role.ADMIN.toString()))
                                 clients = clientService.getAllByCpf(cpf, pageable);
-
+                        if (role.equals(Role.ADMIN.toString()))
+                                clients = clientService.findAll(pageable);
                 }
 
                 return clientMapper.pageToPageDTO(clients);

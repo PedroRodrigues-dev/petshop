@@ -93,6 +93,15 @@ public class PetService {
         return petRepository.findAll(pageable);
     }
 
+    public Page<Pet> findAllByClientId(Long clientId, Pageable pageable) {
+        return petRepository.findAllByClientId(clientId, pageable);
+    }
+
+    public Page<Pet> findAllByClientIdAndUserCpf(Long clientId, String cpf,
+            Pageable pageable) {
+        return petRepository.findAllByClientIdAndUserCpf(clientId, cpf, pageable);
+    }
+
     public Pet update(Long id, Pet pet) {
         if (petRepository.existsById(id)) {
             return petRepository.save(pet);

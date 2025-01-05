@@ -2,6 +2,7 @@ package com.pedro.petshop.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -54,10 +55,66 @@ class BreedControllerTest {
 
         CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
         when(customAuthentication.getCpf()).thenReturn("12345678900");
-        when(customAuthentication.getRole()).thenReturn(Role.CLIENT.toString());
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
         SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
         Page<BreedDTO> result = breedController.getAllBreeds(pageable);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Labrador", result.getContent().get(0).getDescription());
+        assertEquals("Poodle", result.getContent().get(1).getDescription());
+
+        assertEquals(10, result.getSize());
+        assertEquals(0, result.getNumber());
+        assertEquals(1, result.getTotalPages());
+    }
+
+    @Test
+    void testGetAllBreedsByClientIdPaged() {
+        BreedDTO breedDTO1 = createBreed(1L, "Labrador");
+        BreedDTO breedDTO2 = createBreed(2L, "Poodle");
+        Breed breed1 = breedMapper.toEntity(breedDTO1);
+        Breed breed2 = breedMapper.toEntity(breedDTO2);
+
+        Page<Breed> mockPage = new PageImpl<>(List.of(breed1, breed2), PageRequest.of(0, 10), 2);
+
+        when(breedService.findAllByClientId(eq(1L), any(Pageable.class))).thenReturn(mockPage);
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
+
+        Page<BreedDTO> result = breedController.getAllBreedsByClientId(1L, pageable);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Labrador", result.getContent().get(0).getDescription());
+        assertEquals("Poodle", result.getContent().get(1).getDescription());
+
+        assertEquals(10, result.getSize());
+        assertEquals(0, result.getNumber());
+        assertEquals(1, result.getTotalPages());
+    }
+
+    @Test
+    void testGetAllBreedsByPetIdPaged() {
+        BreedDTO breedDTO1 = createBreed(1L, "Labrador");
+        BreedDTO breedDTO2 = createBreed(2L, "Poodle");
+        Breed breed1 = breedMapper.toEntity(breedDTO1);
+        Breed breed2 = breedMapper.toEntity(breedDTO2);
+
+        Page<Breed> mockPage = new PageImpl<>(List.of(breed1, breed2), PageRequest.of(0, 10), 2);
+
+        when(breedService.findAllByPetId(eq(1L), any(Pageable.class))).thenReturn(mockPage);
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
+
+        Page<BreedDTO> result = breedController.getAllBreedsByPetId(1L, pageable);
         assertEquals(2, result.getContent().size());
         assertEquals("Labrador", result.getContent().get(0).getDescription());
         assertEquals("Poodle", result.getContent().get(1).getDescription());

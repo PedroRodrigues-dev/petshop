@@ -53,7 +53,7 @@ public class AppointmentController {
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @PostMapping
         public ResponseEntity<AppointmentDTO> createAppointment(@RequestBody AppointmentDTO appointment) {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -80,7 +80,7 @@ public class AppointmentController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Appointment not found")
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @GetMapping("/{id}")
         public ResponseEntity<AppointmentDTO> getAppointmentById(
                         @Parameter(description = "ID of the appointment to be retrieved") @PathVariable("id") Long id) {
@@ -114,7 +114,7 @@ public class AppointmentController {
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @GetMapping
         public Page<AppointmentDTO> getAllAppointments(@Parameter(hidden = true) Pageable pageable) {
                 Page<Appointment> appointments = null;
@@ -127,10 +127,69 @@ public class AppointmentController {
                         String cpf = customAuth.getCpf();
 
                         if (role.equals(Role.CLIENT.toString()))
-                                appointments = appointmentService.findAll(pageable);
-                        if (role.equals(Role.ADMIN.toString()))
                                 appointments = appointmentService.getAllByUserCpf(cpf, pageable);
+                        if (role.equals(Role.ADMIN.toString()))
+                                appointments = appointmentService.findAll(pageable);
+                }
 
+                return appointmentMapper.pageToPageDTO(appointments);
+        }
+
+        @Operation(summary = "Get all appointments by client id", description = "Retrieves all appointment by client id records", parameters = {
+                        @Parameter(name = "page", description = "Page number (0-based index)", in = ParameterIn.QUERY, example = "0"),
+                        @Parameter(name = "size", description = "Number of items per page", in = ParameterIn.QUERY, example = "10") })
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "List of appointments returned"),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
+        @GetMapping("/client/{clientId}")
+        public Page<AppointmentDTO> getAllAppointmentsByClientId(@PathVariable("clientId") Long clientId,
+                        @Parameter(hidden = true) Pageable pageable) {
+                Page<Appointment> appointments = null;
+
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString()))
+                                appointments = appointmentService.findAllByClientIdAndUserCpf(clientId, cpf, pageable);
+                        if (role.equals(Role.ADMIN.toString()))
+                                appointments = appointmentService.findAllByClientId(clientId, pageable);
+                }
+
+                return appointmentMapper.pageToPageDTO(appointments);
+        }
+
+        @Operation(summary = "Get all appointments by pet id", description = "Retrieves all appointment by pet id records", parameters = {
+                        @Parameter(name = "page", description = "Page number (0-based index)", in = ParameterIn.QUERY, example = "0"),
+                        @Parameter(name = "size", description = "Number of items per page", in = ParameterIn.QUERY, example = "10") })
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "List of appointments returned"),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
+        @GetMapping("/pet/{petId}")
+        public Page<AppointmentDTO> getAllAppointmentsByPetId(@PathVariable("petId") Long petId,
+                        @Parameter(hidden = true) Pageable pageable) {
+                Page<Appointment> appointments = null;
+
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString()))
+                                appointments = appointmentService.findAllByPetIdAndUserCpf(petId, cpf, pageable);
+                        if (role.equals(Role.ADMIN.toString()))
+                                appointments = appointmentService.findAllByPetId(petId, pageable);
                 }
 
                 return appointmentMapper.pageToPageDTO(appointments);
@@ -144,7 +203,7 @@ public class AppointmentController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Appointment not found")
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @PutMapping("/{id}")
         public AppointmentDTO updateAppointment(
                         @Parameter(description = "ID of the appointment to be updated") @PathVariable("id") Long id,
@@ -176,7 +235,7 @@ public class AppointmentController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Appointment not found")
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @DeleteMapping("/{id}")
         public boolean deleteAppointment(
                         @Parameter(description = "ID of the appointment to be deleted") @PathVariable("id") Long id) {

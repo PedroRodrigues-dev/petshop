@@ -13,28 +13,41 @@ import com.pedro.petshop.entities.Address;
 
 @Repository
 public interface AddressRepository extends JpaRepository<Address, Long> {
-    @Query("SELECT a FROM Address a " +
-            "JOIN a.client c " +
-            "JOIN c.user u " +
-            "WHERE a.id = :id AND u.cpf = :cpf")
-    Optional<Address> findByIdAndUserCpf(@Param("id") Long id, @Param("cpf") String cpf);
+        @Query("SELECT a FROM Address a " +
+                        "JOIN a.client c " +
+                        "JOIN c.user u " +
+                        "WHERE a.id = :id AND u.cpf = :cpf")
+        Optional<Address> findByIdAndUserCpf(@Param("id") Long id, @Param("cpf") String cpf);
 
-    @Query("SELECT a FROM Address a " +
-            "JOIN a.client c " +
-            "JOIN c.user u " +
-            "WHERE u.cpf = :cpf")
-    Page<Address> findAllByUserCpf(@Param("cpf") String cpf, Pageable pageable);
+        @Query("SELECT a FROM Address a " +
+                        "JOIN a.client c " +
+                        "JOIN c.user u " +
+                        "WHERE u.cpf = :cpf")
+        Page<Address> findAllByUserCpf(@Param("cpf") String cpf, Pageable pageable);
 
-    @Query("SELECT COUNT(a) > 0 FROM Address a " +
-            "JOIN a.client c " +
-            "JOIN c.user u " +
-            "WHERE a.id = :id AND u.cpf = :cpf")
-    boolean existsByIdAndUserCpf(@Param("id") Long id, @Param("cpf") String cpf);
+        @Query("SELECT COUNT(a) > 0 FROM Address a " +
+                        "JOIN a.client c " +
+                        "JOIN c.user u " +
+                        "WHERE a.id = :id AND u.cpf = :cpf")
+        boolean existsByIdAndUserCpf(@Param("id") Long id, @Param("cpf") String cpf);
 
-    @Query("DELETE FROM Address a " +
-            "WHERE a.id = :id AND EXISTS (" +
-            "    SELECT 1 FROM Client c " +
-            "    JOIN c.user u " +
-            "    WHERE c = a.client AND u.cpf = :cpf)")
-    void deleteByIdAndUserCpf(@Param("id") Long id, @Param("cpf") String cpf);
+        @Query("DELETE FROM Address a " +
+                        "WHERE a.id = :id AND EXISTS (" +
+                        "    SELECT 1 FROM Client c " +
+                        "    JOIN c.user u " +
+                        "    WHERE c = a.client AND u.cpf = :cpf)")
+        void deleteByIdAndUserCpf(@Param("id") Long id, @Param("cpf") String cpf);
+
+        @Query("SELECT a FROM Address a " +
+                        "JOIN a.client c " +
+                        "WHERE c.id = :clientId")
+        Page<Address> findAllByClientId(@Param("clientId") Long clientId, Pageable pageable);
+
+        @Query("SELECT a FROM Address a " +
+                        "JOIN a.client c " +
+                        "JOIN c.user u " +
+                        "WHERE c.id = :clientId AND u.cpf = :cpf")
+        Page<Address> findAllByClientIdAndUserCpf(@Param("clientId") Long clientId,
+                        @Param("cpf") String cpf,
+                        Pageable pageable);
 }

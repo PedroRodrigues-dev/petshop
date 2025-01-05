@@ -37,4 +37,17 @@ public interface ContactRepository extends JpaRepository<Contact, Long> {
                         "    JOIN c.user u " +
                         "    WHERE c = ct.client AND u.cpf = :cpf)")
         void deleteByIdAndUserCpf(@Param("id") Long id, @Param("cpf") String cpf);
+
+        @Query("SELECT ct FROM Contact ct " +
+                        "JOIN ct.client c " +
+                        "WHERE c.id = :clientId")
+        Page<Contact> findAllByClientId(@Param("clientId") Long clientId, Pageable pageable);
+
+        @Query("SELECT ct FROM Contact ct " +
+                        "JOIN ct.client c " +
+                        "JOIN c.user u " +
+                        "WHERE c.id = :clientId AND u.cpf = :cpf")
+        Page<Contact> findAllByClientIdAndUserCpf(@Param("clientId") Long clientId,
+                        @Param("cpf") String cpf,
+                        Pageable pageable);
 }

@@ -4,6 +4,8 @@ Este documento visa garantir que todos os passos do processo de desenvolvimento 
 
 Algumas das automações para o desenvolvimento desse sistema foram projetadas para linux, então em caso de uso em windows alguns desses processos podem conter falhas, entre esses processos está o de geração de containers.
 
+A aplicação roda por padrão em `http://localhost:8181`
+
 ---
 
 ### Inicialização do Projeto
@@ -85,12 +87,12 @@ Funcionalidade: Permite criar e alterar qualquer informação de usuário.
 
 - Implementado em uma rota separada para permitir ou não a inclusão de imagens associadas a cada item.
 
-#### Rotas Adicionais (EM DESENVOLVIMENTO)
+#### Rotas Adicionais
 
 - O sistema inclui rotas para manipular os seguintes dados:
 
 - Contato, Pets e Endereços: Baseados no ID do cliente.
-- Consultas e Raças: Baseados no ID do pet.
+- Consultas e Raças: Baseados no ID do pet e ID do cliente.
 - Clientes:
   Pelo usuário logado (para clientes).
   Por ID (apenas para administradores).

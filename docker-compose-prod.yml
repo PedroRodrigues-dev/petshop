@@ -11,8 +11,6 @@ services:
       - ALLOWED_ORIGIN=*
       - JWT_KEY=SuaChaveSecretaMuitoSeguraParaJWT
       - UPLOAD_DIR=~/Documentos/petshop/uploads
-    ports:
-      - "8080:8080"
     restart: always
     network_mode: host
 

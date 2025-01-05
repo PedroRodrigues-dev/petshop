@@ -30,6 +30,22 @@ public class AppointmentService {
         return appointmentRepository.findAll(pageable);
     }
 
+    public Page<Appointment> findAllByClientId(Long clientId, Pageable pageable) {
+        return appointmentRepository.findAllByClientId(clientId, pageable);
+    }
+
+    public Page<Appointment> findAllByClientIdAndUserCpf(Long clientId, String cpf, Pageable pageable) {
+        return appointmentRepository.findAllByClientIdAndUserCpf(clientId, cpf, pageable);
+    }
+
+    public Page<Appointment> findAllByPetId(Long petId, Pageable pageable) {
+        return appointmentRepository.findAllByPetId(petId, pageable);
+    }
+
+    public Page<Appointment> findAllByPetIdAndUserCpf(Long petId, String cpf, Pageable pageable) {
+        return appointmentRepository.findAllByPetIdAndUserCpf(petId, cpf, pageable);
+    }
+
     public Appointment update(Long id, Appointment appointment) {
         if (appointmentRepository.existsById(id)) {
             return appointmentRepository.save(appointment);

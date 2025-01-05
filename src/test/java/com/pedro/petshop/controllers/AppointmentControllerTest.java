@@ -2,6 +2,7 @@ package com.pedro.petshop.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -55,10 +56,68 @@ class AppointmentControllerTest {
 
         CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
         when(customAuthentication.getCpf()).thenReturn("12345678900");
-        when(customAuthentication.getRole()).thenReturn(Role.CLIENT.toString());
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
         SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
         Page<AppointmentDTO> result = appointmentController.getAllAppointments(pageable);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Checkup", result.getContent().get(0).getDescription());
+        assertEquals("Vaccination", result.getContent().get(1).getDescription());
+
+        assertEquals(10, result.getSize());
+        assertEquals(0, result.getNumber());
+        assertEquals(1, result.getTotalPages());
+    }
+
+    @Test
+    void testGetAllAppointmentsByClientIdPaged() {
+        AppointmentDTO appointmentDTO1 = createAppointment(1L, "Checkup", 100.0);
+        AppointmentDTO appointmentDTO2 = createAppointment(2L, "Vaccination", 50.0);
+        Appointment appointment1 = appointmentMapper.toEntity(appointmentDTO1);
+        Appointment appointment2 = appointmentMapper.toEntity(appointmentDTO2);
+
+        Page<Appointment> mockPage = new PageImpl<>(List.of(appointment1, appointment2), PageRequest.of(0, 10),
+                2);
+
+        when(appointmentService.findAllByClientId(eq(1L), any(Pageable.class))).thenReturn(mockPage);
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
+
+        Page<AppointmentDTO> result = appointmentController.getAllAppointmentsByClientId(1L, pageable);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Checkup", result.getContent().get(0).getDescription());
+        assertEquals("Vaccination", result.getContent().get(1).getDescription());
+
+        assertEquals(10, result.getSize());
+        assertEquals(0, result.getNumber());
+        assertEquals(1, result.getTotalPages());
+    }
+
+    @Test
+    void testGetAllAppointmentsByPetIdPaged() {
+        AppointmentDTO appointmentDTO1 = createAppointment(1L, "Checkup", 100.0);
+        AppointmentDTO appointmentDTO2 = createAppointment(2L, "Vaccination", 50.0);
+        Appointment appointment1 = appointmentMapper.toEntity(appointmentDTO1);
+        Appointment appointment2 = appointmentMapper.toEntity(appointmentDTO2);
+
+        Page<Appointment> mockPage = new PageImpl<>(List.of(appointment1, appointment2), PageRequest.of(0, 10),
+                2);
+
+        when(appointmentService.findAllByPetId(eq(1L), any(Pageable.class))).thenReturn(mockPage);
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
+
+        Page<AppointmentDTO> result = appointmentController.getAllAppointmentsByPetId(1L, pageable);
         assertEquals(2, result.getContent().size());
         assertEquals("Checkup", result.getContent().get(0).getDescription());
         assertEquals("Vaccination", result.getContent().get(1).getDescription());

@@ -53,7 +53,7 @@ public class ContactController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "400", description = "Invalid input data")
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @PostMapping
         public ResponseEntity<ContactDTO> createContact(@RequestBody ContactDTO contact) {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -80,7 +80,7 @@ public class ContactController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Contact not found")
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @GetMapping("/{id}")
         public ResponseEntity<ContactDTO> getContactById(
                         @Parameter(description = "ID of the contact to be retrieved") @PathVariable("id") Long id) {
@@ -114,7 +114,7 @@ public class ContactController {
                         @ApiResponse(responseCode = "401", description = "Unauthorized"),
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @GetMapping
         public Page<ContactDTO> getAllContacts(@Parameter(hidden = true) Pageable pageable) {
                 Page<Contact> contacts = null;
@@ -127,10 +127,40 @@ public class ContactController {
                         String cpf = customAuth.getCpf();
 
                         if (role.equals(Role.CLIENT.toString()))
-                                contacts = contactService.findAll(pageable);
-                        if (role.equals(Role.ADMIN.toString()))
                                 contacts = contactService.getAllByUserCpf(cpf, pageable);
+                        if (role.equals(Role.ADMIN.toString()))
+                                contacts = contactService.findAll(pageable);
+                }
 
+                return contactMapper.pageToPageDTO(contacts);
+        }
+
+        @Operation(summary = "Get contacts by clientId", description = "Retrieves contact by clientId records", parameters = {
+                        @Parameter(name = "page", description = "Page number (0-based index)", in = ParameterIn.QUERY, example = "0"),
+                        @Parameter(name = "size", description = "Number of items per page", in = ParameterIn.QUERY, example = "10")
+        })
+        @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of contactsreturned"),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @ApiResponse(responseCode = "403", description = "Forbidden"), })
+
+        @RolesAllowed({ "ADMIN", "CLIENT" })
+        @GetMapping("/client/{clientId}")
+        public Page<ContactDTO> getContactsByClientId(@PathVariable("clientId") Long clientId,
+                        @Parameter(hidden = true) Pageable pageable) {
+                Page<Contact> contacts = null;
+
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString()))
+                                contacts = contactService.findAllByClientIdAndUserCpf(clientId, cpf,
+                                                pageable);
+                        if (role.equals(Role.ADMIN.toString()))
+                                contacts = contactService.findAllByClientId(clientId, pageable);
                 }
 
                 return contactMapper.pageToPageDTO(contacts);
@@ -144,7 +174,7 @@ public class ContactController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Contact not found")
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @PutMapping("/{id}")
         public ContactDTO updateContact(
                         @Parameter(description = "ID of the contact to be updated") @PathVariable("id") Long id,
@@ -176,7 +206,7 @@ public class ContactController {
                         @ApiResponse(responseCode = "403", description = "Forbidden"),
                         @ApiResponse(responseCode = "404", description = "Contact not found")
         })
-        @RolesAllowed({ "ADMIN" })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
         @DeleteMapping("/{id}")
         public boolean deleteContact(
                         @Parameter(description = "ID of the contact to be deleted") @PathVariable("id") Long id) {

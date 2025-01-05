@@ -30,6 +30,16 @@ public class AddressService {
         return addressRepository.findAll(pageable);
     }
 
+    public Page<Address> findAllByClientId(Long clientId, Pageable pageable) {
+        return addressRepository.findAllByClientId(clientId, pageable);
+    }
+
+    public Page<Address> findAllByClientIdAndUserCpf(Long clientId, String cpf,
+            Pageable pageable) {
+        return addressRepository.findAllByClientIdAndUserCpf(clientId, cpf,
+                pageable);
+    }
+
     public Address update(Long id, Address address) {
         if (addressRepository.existsById(id)) {
             return addressRepository.save(address);

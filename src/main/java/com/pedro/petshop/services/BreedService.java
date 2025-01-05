@@ -30,6 +30,22 @@ public class BreedService {
         return breedRepository.findAll(pageable);
     }
 
+    public Page<Breed> findAllByClientId(Long clientId, Pageable pageable) {
+        return breedRepository.findAllByClientId(clientId, pageable);
+    }
+
+    public Page<Breed> findAllByClientIdAndUserCpf(Long clientId, String cpf, Pageable pageable) {
+        return breedRepository.findAllByClientIdAndUserCpf(clientId, cpf, pageable);
+    }
+
+    public Page<Breed> findAllByPetId(Long petId, Pageable pageable) {
+        return breedRepository.findAllByPetId(petId, pageable);
+    }
+
+    public Page<Breed> findAllByPetIdAndUserCpf(Long petId, String cpf, Pageable pageable) {
+        return breedRepository.findAllByPetIdAndUserCpf(petId, cpf, pageable);
+    }
+
     public Breed update(Long id, Breed breed) {
         if (breedRepository.existsById(id)) {
             return breedRepository.save(breed);

@@ -2,6 +2,7 @@ package com.pedro.petshop.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -50,7 +51,7 @@ class ContactControllerTest {
 
         CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
         when(customAuthentication.getCpf()).thenReturn("12345678900");
-        when(customAuthentication.getRole()).thenReturn(Role.CLIENT.toString());
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
         SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
         when(contactService.findAll(any(Pageable.class))).thenReturn(mockPage);
@@ -58,6 +59,38 @@ class ContactControllerTest {
         Pageable pageable = PageRequest.of(0, 10);
 
         Page<ContactDTO> result = contactController.getAllContacts(pageable);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Phone", result.getContent().get(0).getType());
+        assertEquals("Email", result.getContent().get(1).getType());
+
+        assertEquals(10, result.getSize());
+        assertEquals(0, result.getNumber());
+        assertEquals(1, result.getTotalPages());
+    }
+
+    @Test
+    void testGetContactsByClientIdPaged() {
+        ContactDTO contactDTO1 = createContact(1L, "Client1", "Phone", "123456789");
+        ContactDTO contactDTO2 = createContact(2L, "Client2", "Email",
+                "client2@example.com");
+        Contact contact1 = contactMapper.toEntity(contactDTO1);
+        Contact contact2 = contactMapper.toEntity(contactDTO2);
+
+        Page<Contact> mockPage = new PageImpl<>(List.of(contact1, contact2),
+                PageRequest.of(0, 10), 2);
+
+        when(contactService.findAllByClientId(eq(1L), any())).thenReturn(mockPage);
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
+
+        Page<ContactDTO> result = contactController.getContactsByClientId(1L,
+                pageable);
+
         assertEquals(2, result.getContent().size());
         assertEquals("Phone", result.getContent().get(0).getType());
         assertEquals("Email", result.getContent().get(1).getType());

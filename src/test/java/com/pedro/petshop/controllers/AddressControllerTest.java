@@ -2,6 +2,7 @@ package com.pedro.petshop.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -101,10 +102,36 @@ class AddressControllerTest {
 
         CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
         when(customAuthentication.getCpf()).thenReturn("12345678900");
-        when(customAuthentication.getRole()).thenReturn(Role.CLIENT.toString());
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
         SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
         Page<AddressDTO> result = addressController.getAllAddresses(PageRequest.of(0, 10));
+
+        assertEquals(2, result.getContent().size());
+        assertEquals("Street 123", result.getContent().get(0).getStreet());
+        assertEquals("Street 456", result.getContent().get(1).getStreet());
+    }
+
+    @Test
+    void testGetAddressesByClientId() {
+        AddressDTO addressDTO1 = createAddress(1L, "Street 123", "City1",
+                "Neighborhood1", "Apt 101", "Home");
+        AddressDTO addressDTO2 = createAddress(2L, "Street 456", "City2",
+                "Neighborhood2", "Apt 202", "Work");
+        Address address1 = addressMapper.toEntity(addressDTO1);
+        Address address2 = addressMapper.toEntity(addressDTO2);
+        Page<Address> mockPage = new PageImpl<>(List.of(address1, address2),
+                PageRequest.of(0, 10), 2);
+
+        when(addressService.findAllByClientId(eq(1L), any())).thenReturn(mockPage);
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
+
+        Page<AddressDTO> result = addressController.getAddressesByClientId(1L,
+                PageRequest.of(0, 10));
 
         assertEquals(2, result.getContent().size());
         assertEquals("Street 123", result.getContent().get(0).getStreet());
