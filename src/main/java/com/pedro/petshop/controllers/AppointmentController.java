@@ -5,6 +5,8 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,11 +16,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.pedro.petshop.configs.CustomAuthentication;
 import com.pedro.petshop.configs.RolesAllowed;
 import com.pedro.petshop.dtos.AppointmentDTO;
 import com.pedro.petshop.entities.Appointment;
+import com.pedro.petshop.enums.Role;
 import com.pedro.petshop.mappers.AppointmentMapper;
 import com.pedro.petshop.services.AppointmentService;
+import com.pedro.petshop.services.PetService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,10 +36,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 public class AppointmentController {
 
         private final AppointmentService appointmentService;
+        private final PetService petService;
         private final AppointmentMapper appointmentMapper;
 
-        public AppointmentController(AppointmentService appointmentService, AppointmentMapper appointmentMapper) {
+        public AppointmentController(AppointmentService appointmentService, PetService petService,
+                        AppointmentMapper appointmentMapper) {
                 this.appointmentService = appointmentService;
+                this.petService = petService;
                 this.appointmentMapper = appointmentMapper;
         }
 
@@ -47,8 +55,22 @@ public class AppointmentController {
         })
         @RolesAllowed({ "ADMIN" })
         @PostMapping
-        public AppointmentDTO createAppointment(@RequestBody AppointmentDTO appointment) {
-                return appointmentMapper.toDto(appointmentService.create(appointmentMapper.toEntity(appointment)));
+        public ResponseEntity<AppointmentDTO> createAppointment(@RequestBody AppointmentDTO appointment) {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString())
+                                        && !petService.existsByIdAndUserCpf(appointment.getPetId(), cpf))
+                                return ResponseEntity.notFound().build();
+
+                }
+
+                return ResponseEntity.ok(appointmentMapper
+                                .toDto(appointmentService.create(appointmentMapper.toEntity(appointment))));
         }
 
         @Operation(summary = "Get appointment by ID", description = "Retrieves a specific appointment by its ID")
@@ -62,9 +84,23 @@ public class AppointmentController {
         @GetMapping("/{id}")
         public ResponseEntity<AppointmentDTO> getAppointmentById(
                         @Parameter(description = "ID of the appointment to be retrieved") @PathVariable("id") Long id) {
-                Optional<Appointment> appointment = appointmentService.findById(id);
+                Optional<Appointment> appointment = null;
 
-                if (appointment.isPresent())
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString()))
+                                appointment = appointmentService.getByIdAndUserCpf(id, cpf);
+                        if (role.equals(Role.ADMIN.toString()))
+                                appointment = appointmentService.findById(id);
+
+                }
+
+                if (appointment != null && appointment.isPresent())
                         return ResponseEntity.ok(appointmentMapper.toDto(appointment.get()));
 
                 return ResponseEntity.notFound().build();
@@ -81,7 +117,23 @@ public class AppointmentController {
         @RolesAllowed({ "ADMIN" })
         @GetMapping
         public Page<AppointmentDTO> getAllAppointments(@Parameter(hidden = true) Pageable pageable) {
-                return appointmentMapper.pageToPageDTO(appointmentService.findAll(pageable));
+                Page<Appointment> appointments = null;
+
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString()))
+                                appointments = appointmentService.findAll(pageable);
+                        if (role.equals(Role.ADMIN.toString()))
+                                appointments = appointmentService.getAllByUserCpf(cpf, pageable);
+
+                }
+
+                return appointmentMapper.pageToPageDTO(appointments);
         }
 
         @Operation(summary = "Update an existing appointment", description = "Updates an existing appointment record")
@@ -96,8 +148,25 @@ public class AppointmentController {
         @PutMapping("/{id}")
         public AppointmentDTO updateAppointment(
                         @Parameter(description = "ID of the appointment to be updated") @PathVariable("id") Long id,
-                        @RequestBody AppointmentDTO appointment) {
-                return appointmentMapper.toDto(appointmentService.update(id, appointmentMapper.toEntity(appointment)));
+                        @RequestBody AppointmentDTO appointmentDTO) {
+                Appointment appointment = null;
+
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString()))
+                                appointment = appointmentService.updateByIdAndUserCpf(id, cpf,
+                                                appointmentMapper.toEntity(appointmentDTO));
+                        if (role.equals(Role.ADMIN.toString()))
+                                appointment = appointmentService.update(id, appointmentMapper.toEntity(appointmentDTO));
+
+                }
+
+                return appointmentMapper.toDto(appointment);
         }
 
         @Operation(summary = "Delete an appointment", description = "Deletes an appointment record by its ID")
@@ -111,6 +180,19 @@ public class AppointmentController {
         @DeleteMapping("/{id}")
         public boolean deleteAppointment(
                         @Parameter(description = "ID of the appointment to be deleted") @PathVariable("id") Long id) {
-                return appointmentService.delete(id);
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString()))
+                                return appointmentService.deleteByIdAndUserCpf(id, cpf);
+                        if (role.equals(Role.ADMIN.toString()))
+                                return appointmentService.delete(id);
+                }
+
+                return false;
         }
 }

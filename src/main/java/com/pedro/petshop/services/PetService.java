@@ -30,7 +30,7 @@ public class PetService {
     }
 
     public Optional<Resource> getProfileImage(Long id) {
-        Pet pet = petRepository.findById(id).orElseThrow(() -> new RuntimeException("Client not found"));
+        Pet pet = petRepository.findById(id).orElseThrow(() -> new RuntimeException("Pet not found"));
 
         if (pet.getImage() == null)
             return null;
@@ -94,6 +94,35 @@ public class PetService {
     public boolean delete(Long id) {
         if (petRepository.existsById(id)) {
             petRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean existsByIdAndUserCpf(Long id, String cpf) {
+        return petRepository.existsByIdAndUserCpf(id, cpf);
+    }
+
+    public Optional<Pet> getByIdAndUserCpf(Long id, String cpf) {
+        return petRepository.findByIdAndUserCpf(id, cpf);
+    }
+
+    public Page<Pet> getAllByUserCpf(String cpf, Pageable pageable) {
+        return petRepository.findAllByUserCpf(cpf, pageable);
+    }
+
+    public Pet updateByIdAndUserCpf(Long id, String cpf, Pet updatedPet) {
+        if (petRepository.existsByIdAndUserCpf(id, cpf)) {
+            updatedPet.setId(id);
+            return petRepository.save(updatedPet);
+        } else {
+            throw new RuntimeException("Pet not found with id and cpf");
+        }
+    }
+
+    public boolean deleteByIdAndUserCpf(Long id, String cpf) {
+        if (petRepository.existsByIdAndUserCpf(id, cpf)) {
+            petRepository.deleteByIdAndUserCpf(id, cpf);
             return true;
         }
         return false;

@@ -44,4 +44,33 @@ public class AddressService {
         }
         return false;
     }
+
+    public boolean existsByIdAndUserCpf(Long id, String cpf) {
+        return addressRepository.existsByIdAndUserCpf(id, cpf);
+    }
+
+    public Optional<Address> getByIdAndUserCpf(Long id, String cpf) {
+        return addressRepository.findByIdAndUserCpf(id, cpf);
+    }
+
+    public Page<Address> getAllByUserCpf(String cpf, Pageable pageable) {
+        return addressRepository.findAllByUserCpf(cpf, pageable);
+    }
+
+    public Address updateByIdAndUserCpf(Long id, String cpf, Address updatedAddress) {
+        if (addressRepository.existsByIdAndUserCpf(id, cpf)) {
+            updatedAddress.setId(id);
+            return addressRepository.save(updatedAddress);
+        } else {
+            throw new RuntimeException("Address not found with id and cpf");
+        }
+    }
+
+    public boolean deleteByIdAndUserCpf(Long id, String cpf) {
+        if (addressRepository.existsByIdAndUserCpf(id, cpf)) {
+            addressRepository.deleteByIdAndUserCpf(id, cpf);
+            return true;
+        }
+        return false;
+    }
 }

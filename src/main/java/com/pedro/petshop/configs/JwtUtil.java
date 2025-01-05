@@ -2,6 +2,7 @@ package com.pedro.petshop.configs;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.Map;
 
 import javax.crypto.SecretKey;
 
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -24,9 +26,15 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String username, Map<String, Object> additionalClaims) {
         Key key = generateSecureKey();
-        return Jwts.builder()
+        JwtBuilder jwtBuilder = Jwts.builder();
+
+        if (additionalClaims != null) {
+            additionalClaims.forEach(jwtBuilder::claim);
+        }
+
+        return jwtBuilder
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))

@@ -70,19 +70,19 @@ public class UserService {
         return true;
     }
 
-    public Boolean loginUser(LoginDTO loginUser) {
+    public Optional<User> loginUser(LoginDTO loginUser) {
         Optional<User> userOptional = userRepository.findByName(loginUser.getName());
 
         if (userOptional.isEmpty()) {
-            return false;
+            return null;
         }
 
         User user = userOptional.get();
 
         if (passwordEncoder.matches(loginUser.getPassword(), user.getPassword())) {
-            return true;
+            return userOptional;
         } else {
-            return false;
+            return null;
         }
     }
 }

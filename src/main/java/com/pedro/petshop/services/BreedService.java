@@ -44,4 +44,33 @@ public class BreedService {
         }
         return false;
     }
+
+    public boolean existsByIdAndUserCpf(Long id, String cpf) {
+        return breedRepository.existsByIdAndUserCpf(id, cpf);
+    }
+
+    public Optional<Breed> getByIdAndUserCpf(Long id, String cpf) {
+        return breedRepository.findByIdAndUserCpf(id, cpf);
+    }
+
+    public Page<Breed> getAllByUserCpf(String cpf, Pageable pageable) {
+        return breedRepository.findAllByUserCpf(cpf, pageable);
+    }
+
+    public Breed updateByIdAndUserCpf(Long id, String cpf, Breed updatedBreed) {
+        if (breedRepository.existsByIdAndUserCpf(id, cpf)) {
+            updatedBreed.setId(id);
+            return breedRepository.save(updatedBreed);
+        } else {
+            throw new RuntimeException("Breed not found with id and cpf");
+        }
+    }
+
+    public boolean deleteByIdAndUserCpf(Long id, String cpf) {
+        if (breedRepository.existsByIdAndUserCpf(id, cpf)) {
+            breedRepository.deleteByIdAndUserCpf(id, cpf);
+            return true;
+        }
+        return false;
+    }
 }

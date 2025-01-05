@@ -13,6 +13,7 @@ public interface ClientMapper {
     ClientDTO toDto(Client client);
 
     @Mapping(source = "cpf", target = "user.cpf")
+    @Mapping(target = "image", ignore = true)
     Client toEntity(ClientDTO clientDTO);
 
     default Page<ClientDTO> pageToPageDTO(Page<Client> clientPage) {

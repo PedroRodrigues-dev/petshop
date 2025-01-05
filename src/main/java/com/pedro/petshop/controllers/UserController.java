@@ -5,6 +5,8 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.pedro.petshop.configs.CustomAuthentication;
 import com.pedro.petshop.configs.RolesAllowed;
 import com.pedro.petshop.dtos.UserDTO;
 import com.pedro.petshop.entities.User;
@@ -36,6 +39,54 @@ public class UserController {
         public UserController(UserService userService, UserMapper userMapper) {
                 this.userService = userService;
                 this.userMapper = userMapper;
+        }
+
+        @Operation(summary = "Get logged user data", description = "Get logged user data to the system")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "User recived successfully"),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @ApiResponse(responseCode = "403", description = "Forbidden"),
+        })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
+        @GetMapping("/logged")
+        public ResponseEntity<UserDTO> getLoggedUser() {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String cpf = customAuth.getCpf();
+
+                        Optional<User> user = userService.findById(cpf);
+
+                        if (user.isPresent()) {
+                                user.get().setPassword("");
+                                return ResponseEntity.ok(userMapper.toDto(user.get()));
+                        }
+                }
+
+                return ResponseEntity.notFound().build();
+        }
+
+        @Operation(summary = "Update logged user", description = "Updates loggeduser details")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "User updated successfully"),
+                        @ApiResponse(responseCode = "400", description = "Invalid user input data"),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @ApiResponse(responseCode = "404", description = "User not found")
+        })
+        @RolesAllowed({ "ADMIN", "CLIENT" })
+        @PutMapping("/logged")
+        public ResponseEntity<UserDTO> updateLoggedUser(@RequestBody UserDTO user) {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String cpf = customAuth.getCpf();
+                        return ResponseEntity.ok(userMapper.toDto(userService.update(cpf, userMapper.toEntity(user))));
+                }
+
+                return ResponseEntity.notFound().build();
         }
 
         @Operation(summary = "Create a new user", description = "Creates a new user in the system")

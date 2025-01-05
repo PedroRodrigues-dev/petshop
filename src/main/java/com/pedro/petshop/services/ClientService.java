@@ -98,4 +98,33 @@ public class ClientService {
         }
         return false;
     }
+
+    public boolean existsByIdAndCpf(Long id, String cpf) {
+        return clientRepository.existsByIdAndCpf(id, cpf);
+    }
+
+    public Optional<Client> getByIdAndCpf(Long id, String cpf) {
+        return clientRepository.findByIdAndCpf(id, cpf);
+    }
+
+    public Page<Client> getAllByCpf(String cpf, Pageable pageable) {
+        return clientRepository.findAllByCpf(cpf, pageable);
+    }
+
+    public Client updateByIdAndCpf(Long id, String cpf, Client updatedClient) {
+        if (clientRepository.existsByIdAndCpf(id, cpf)) {
+            updatedClient.setId(id);
+            return clientRepository.save(updatedClient);
+        } else {
+            throw new RuntimeException("Client not found with id and cpf");
+        }
+    }
+
+    public boolean deleteByIdAndCpf(Long id, String cpf) {
+        if (clientRepository.existsByIdAndCpf(id, cpf)) {
+            clientRepository.deleteByIdAndCpf(id, cpf);
+            return true;
+        }
+        return false;
+    }
 }

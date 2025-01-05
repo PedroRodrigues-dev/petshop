@@ -44,4 +44,33 @@ public class ContactService {
         }
         return false;
     }
+
+    public boolean existsByIdAndUserCpf(Long id, String cpf) {
+        return contactRepository.existsByIdAndUserCpf(id, cpf);
+    }
+
+    public Optional<Contact> getByIdAndUserCpf(Long id, String cpf) {
+        return contactRepository.findByIdAndUserCpf(id, cpf);
+    }
+
+    public Page<Contact> getAllByUserCpf(String cpf, Pageable pageable) {
+        return contactRepository.findAllByUserCpf(cpf, pageable);
+    }
+
+    public Contact updateByIdAndUserCpf(Long id, String cpf, Contact updatedContact) {
+        if (contactRepository.existsByIdAndUserCpf(id, cpf)) {
+            updatedContact.setId(id);
+            return contactRepository.save(updatedContact);
+        } else {
+            throw new RuntimeException("Contact not found with id and cpf");
+        }
+    }
+
+    public boolean deleteByIdAndUserCpf(Long id, String cpf) {
+        if (contactRepository.existsByIdAndUserCpf(id, cpf)) {
+            contactRepository.deleteByIdAndUserCpf(id, cpf);
+            return true;
+        }
+        return false;
+    }
 }

@@ -2,6 +2,7 @@ package com.pedro.petshop.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -16,10 +17,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import com.pedro.petshop.configs.CustomAuthentication;
 import com.pedro.petshop.dtos.ContactDTO;
 import com.pedro.petshop.entities.Contact;
+import com.pedro.petshop.enums.Role;
 import com.pedro.petshop.mappers.ContactMapper;
 import com.pedro.petshop.services.ContactService;
 
@@ -44,6 +48,11 @@ class ContactControllerTest {
 
         Page<Contact> mockPage = new PageImpl<>(List.of(contact1, contact2), PageRequest.of(0, 10), 2);
 
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.CLIENT.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
+
         when(contactService.findAll(any(Pageable.class))).thenReturn(mockPage);
 
         Pageable pageable = PageRequest.of(0, 10);
@@ -62,7 +71,12 @@ class ContactControllerTest {
     void testGetContactById_ContactExists() {
         ContactDTO mockContactDTO = createContact(1L, "Client1", "Phone", "123456789");
         Contact mockContact = contactMapper.toEntity(mockContactDTO);
-        when(contactService.findById(1L)).thenReturn(Optional.of(mockContact));
+        when(contactService.getByIdAndUserCpf(1L, "12345678900")).thenReturn(Optional.of(mockContact));
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.CLIENT.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
         ResponseEntity<ContactDTO> response = contactController.getContactById(1L);
 
@@ -89,9 +103,17 @@ class ContactControllerTest {
 
         ContactDTO contactToCreate = createContact(null, "Client1", "Phone", "123456789");
 
-        ContactDTO result = contactController.createContact(contactToCreate);
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
-        assertEquals("Phone", result.getType());
+        ResponseEntity<ContactDTO> result = contactController.createContact(contactToCreate);
+
+        ContactDTO body = Optional.ofNullable(result.getBody())
+                .orElseThrow(() -> new AssertionError("Response body should not be null"));
+
+        assertEquals("Phone", body.getType());
     }
 
     @Test
@@ -99,6 +121,11 @@ class ContactControllerTest {
         ContactDTO mockContactDTO = createContact(1L, "Client1", "Phone", "123456789");
         Contact mockContact = contactMapper.toEntity(mockContactDTO);
         when(contactService.update(any(Long.class), any(Contact.class))).thenReturn(mockContact);
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
         ContactDTO contactToUpdate = createContact(1L, "Client1", "Phone", "123456789");
 
@@ -110,6 +137,11 @@ class ContactControllerTest {
     @Test
     void testDeleteContact() {
         when(contactService.delete(1L)).thenReturn(true);
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
         boolean result = contactController.deleteContact(1L);
 

@@ -2,7 +2,7 @@ name: petshop-prod
 
 services:
   petshop:
-    image: petshop:1.0.0
+    image: petshop:1.0.0-LTS
     container_name: petshop
     environment:
       - DB_URL=jdbc:postgresql://localhost:5432/petshop

@@ -2,6 +2,7 @@ package com.pedro.petshop.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -16,10 +17,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import com.pedro.petshop.configs.CustomAuthentication;
 import com.pedro.petshop.dtos.AppointmentDTO;
 import com.pedro.petshop.entities.Appointment;
+import com.pedro.petshop.enums.Role;
 import com.pedro.petshop.mappers.AppointmentMapper;
 import com.pedro.petshop.services.AppointmentService;
 
@@ -49,6 +53,11 @@ class AppointmentControllerTest {
 
         Pageable pageable = PageRequest.of(0, 10);
 
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.CLIENT.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
+
         Page<AppointmentDTO> result = appointmentController.getAllAppointments(pageable);
         assertEquals(2, result.getContent().size());
         assertEquals("Checkup", result.getContent().get(0).getDescription());
@@ -63,7 +72,12 @@ class AppointmentControllerTest {
     void testGetAppointmentById_AppointmentExists() {
         AppointmentDTO mockAppointmentDTO = createAppointment(1L, "Checkup", 100.0);
         Appointment mockAppointment = appointmentMapper.toEntity(mockAppointmentDTO);
-        when(appointmentService.findById(1L)).thenReturn(Optional.of(mockAppointment));
+        when(appointmentService.getByIdAndUserCpf(1L, "12345678900")).thenReturn(Optional.of(mockAppointment));
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.CLIENT.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
         ResponseEntity<AppointmentDTO> response = appointmentController.getAppointmentById(1L);
 
@@ -90,10 +104,18 @@ class AppointmentControllerTest {
 
         AppointmentDTO appointmentToCreate = createAppointment(null, "Checkup", 100.0);
 
-        AppointmentDTO result = appointmentController.createAppointment(appointmentToCreate);
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
-        assertEquals("Checkup", result.getDescription());
-        assertEquals(100.0, result.getCost());
+        ResponseEntity<AppointmentDTO> result = appointmentController.createAppointment(appointmentToCreate);
+
+        AppointmentDTO body = Optional.ofNullable(result.getBody())
+                .orElseThrow(() -> new AssertionError("Response body should not be null"));
+
+        assertEquals("Checkup", body.getDescription());
+        assertEquals(100.0, body.getCost());
     }
 
     @Test
@@ -101,6 +123,11 @@ class AppointmentControllerTest {
         AppointmentDTO mockAppointmentDTO = createAppointment(1L, "Updated Checkup", 120.0);
         Appointment mockAppointment = appointmentMapper.toEntity(mockAppointmentDTO);
         when(appointmentService.update(any(Long.class), any(Appointment.class))).thenReturn(mockAppointment);
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
         AppointmentDTO appointmentToUpdate = createAppointment(1L, "Updated Checkup", 120.0);
 
@@ -113,6 +140,11 @@ class AppointmentControllerTest {
     @Test
     void testDeleteAppointment() {
         when(appointmentService.delete(1L)).thenReturn(true);
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
         boolean result = appointmentController.deleteAppointment(1L);
 

@@ -44,4 +44,33 @@ public class AppointmentService {
         }
         return false;
     }
+
+    public boolean existsByIdAndUserCpf(Long id, String cpf) {
+        return appointmentRepository.existsByIdAndUserCpf(id, cpf);
+    }
+
+    public Optional<Appointment> getByIdAndUserCpf(Long id, String cpf) {
+        return appointmentRepository.findByIdAndUserCpf(id, cpf);
+    }
+
+    public Page<Appointment> getAllByUserCpf(String cpf, Pageable pageable) {
+        return appointmentRepository.findAllByUserCpf(cpf, pageable);
+    }
+
+    public Appointment updateByIdAndUserCpf(Long id, String cpf, Appointment updatedAppointment) {
+        if (appointmentRepository.existsByIdAndUserCpf(id, cpf)) {
+            updatedAppointment.setId(id);
+            return appointmentRepository.save(updatedAppointment);
+        } else {
+            throw new RuntimeException("Appointment not found with id and cpf");
+        }
+    }
+
+    public boolean deleteByIdAndUserCpf(Long id, String cpf) {
+        if (appointmentRepository.existsByIdAndUserCpf(id, cpf)) {
+            appointmentRepository.deleteByIdAndUserCpf(id, cpf);
+            return true;
+        }
+        return false;
+    }
 }

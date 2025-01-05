@@ -1,5 +1,9 @@
 package com.pedro.petshop.controllers;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,13 +65,17 @@ public class AuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<TokenDTO> login(@RequestBody LoginDTO loginUser) {
-        Boolean isLoggged = userService.loginUser(loginUser);
+        Optional<User> loggedUser = userService.loginUser(loginUser);
 
-        if (!isLoggged) {
+        if (loggedUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        String token = jwtUtil.generateToken(loginUser.getName());
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", loggedUser.get().getRole());
+        claims.put("cpf", loggedUser.get().getCpf());
+
+        String token = jwtUtil.generateToken(loginUser.getName(), claims);
         TokenDTO tokenObject = new TokenDTO();
         tokenObject.setToken("Bearer " + token);
 

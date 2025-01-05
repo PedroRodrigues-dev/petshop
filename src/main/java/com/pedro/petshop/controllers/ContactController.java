@@ -5,6 +5,8 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,10 +16,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.pedro.petshop.configs.CustomAuthentication;
 import com.pedro.petshop.configs.RolesAllowed;
 import com.pedro.petshop.dtos.ContactDTO;
 import com.pedro.petshop.entities.Contact;
+import com.pedro.petshop.enums.Role;
 import com.pedro.petshop.mappers.ContactMapper;
+import com.pedro.petshop.services.ClientService;
 import com.pedro.petshop.services.ContactService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,10 +36,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 public class ContactController {
 
         private final ContactService contactService;
+        private final ClientService clientService;
         private final ContactMapper contactMapper;
 
-        public ContactController(ContactService contactService, ContactMapper contactMapper) {
+        public ContactController(ContactService contactService,
+                        ClientService clientService, ContactMapper contactMapper) {
                 this.contactService = contactService;
+                this.clientService = clientService;
                 this.contactMapper = contactMapper;
         }
 
@@ -47,8 +55,22 @@ public class ContactController {
         })
         @RolesAllowed({ "ADMIN" })
         @PostMapping
-        public ContactDTO createContact(@RequestBody ContactDTO contact) {
-                return contactMapper.toDto(contactService.create(contactMapper.toEntity(contact)));
+        public ResponseEntity<ContactDTO> createContact(@RequestBody ContactDTO contact) {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString())
+                                        && !clientService.existsByIdAndCpf(contact.getClientId(), cpf))
+                                return ResponseEntity.notFound().build();
+
+                }
+
+                return ResponseEntity
+                                .ok(contactMapper.toDto(contactService.create(contactMapper.toEntity(contact))));
         }
 
         @Operation(summary = "Get contact by ID", description = "Retrieves a specific contact by its ID")
@@ -62,9 +84,23 @@ public class ContactController {
         @GetMapping("/{id}")
         public ResponseEntity<ContactDTO> getContactById(
                         @Parameter(description = "ID of the contact to be retrieved") @PathVariable("id") Long id) {
-                Optional<Contact> contact = contactService.findById(id);
+                Optional<Contact> contact = null;
 
-                if (contact.isPresent())
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString()))
+                                contact = contactService.getByIdAndUserCpf(id, cpf);
+                        if (role.equals(Role.ADMIN.toString()))
+                                contact = contactService.findById(id);
+
+                }
+
+                if (contact != null && contact.isPresent())
                         return ResponseEntity.ok(contactMapper.toDto(contact.get()));
 
                 return ResponseEntity.notFound().build();
@@ -81,7 +117,23 @@ public class ContactController {
         @RolesAllowed({ "ADMIN" })
         @GetMapping
         public Page<ContactDTO> getAllContacts(@Parameter(hidden = true) Pageable pageable) {
-                return contactMapper.pageToPageDTO(contactService.findAll(pageable));
+                Page<Contact> contacts = null;
+
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString()))
+                                contacts = contactService.findAll(pageable);
+                        if (role.equals(Role.ADMIN.toString()))
+                                contacts = contactService.getAllByUserCpf(cpf, pageable);
+
+                }
+
+                return contactMapper.pageToPageDTO(contacts);
         }
 
         @Operation(summary = "Update an existing contact", description = "Updates an existing contact record")
@@ -96,8 +148,25 @@ public class ContactController {
         @PutMapping("/{id}")
         public ContactDTO updateContact(
                         @Parameter(description = "ID of the contact to be updated") @PathVariable("id") Long id,
-                        @RequestBody ContactDTO contact) {
-                return contactMapper.toDto(contactService.update(id, contactMapper.toEntity(contact)));
+                        @RequestBody ContactDTO contactDTO) {
+                Contact contact = null;
+
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString()))
+                                contact = contactService.updateByIdAndUserCpf(id, cpf,
+                                                contactMapper.toEntity(contactDTO));
+                        if (role.equals(Role.ADMIN.toString()))
+                                contact = contactService.update(id, contactMapper.toEntity(contactDTO));
+
+                }
+
+                return contactMapper.toDto(contact);
         }
 
         @Operation(summary = "Delete a contact", description = "Deletes a contact record by its ID")
@@ -111,6 +180,19 @@ public class ContactController {
         @DeleteMapping("/{id}")
         public boolean deleteContact(
                         @Parameter(description = "ID of the contact to be deleted") @PathVariable("id") Long id) {
-                return contactService.delete(id);
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+                if (authentication instanceof CustomAuthentication) {
+                        CustomAuthentication customAuth = (CustomAuthentication) authentication;
+                        String role = customAuth.getRole();
+                        String cpf = customAuth.getCpf();
+
+                        if (role.equals(Role.CLIENT.toString()))
+                                return contactService.deleteByIdAndUserCpf(id, cpf);
+                        if (role.equals(Role.ADMIN.toString()))
+                                return contactService.delete(id);
+                }
+
+                return false;
         }
 }

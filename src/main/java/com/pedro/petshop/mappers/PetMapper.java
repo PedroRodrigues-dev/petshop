@@ -16,6 +16,7 @@ public interface PetMapper {
 
     @Mapping(source = "clientId", target = "client.id")
     @Mapping(source = "breedId", target = "breed.id")
+    @Mapping(target = "image", ignore = true)
     Pet toEntity(PetDTO petDTO);
 
     default Page<PetDTO> pageToPageDTO(Page<Pet> petPage) {

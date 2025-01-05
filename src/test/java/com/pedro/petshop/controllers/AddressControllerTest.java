@@ -2,6 +2,7 @@ package com.pedro.petshop.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -15,10 +16,13 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import com.pedro.petshop.configs.CustomAuthentication;
 import com.pedro.petshop.dtos.AddressDTO;
 import com.pedro.petshop.entities.Address;
+import com.pedro.petshop.enums.Role;
 import com.pedro.petshop.mappers.AddressMapper;
 import com.pedro.petshop.services.AddressService;
 
@@ -40,20 +44,33 @@ class AddressControllerTest {
         Address address = addressMapper.toEntity(addressDTO);
         when(addressService.create(address)).thenReturn(address);
 
-        AddressDTO result = addressController.createAddress(addressDTO);
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
-        assertEquals("Street 123", result.getStreet());
-        assertEquals("City1", result.getCity());
-        assertEquals("Neighborhood1", result.getNeighborhood());
-        assertEquals("Apt 101", result.getComplement());
-        assertEquals("Home", result.getTag());
+        ResponseEntity<AddressDTO> result = addressController.createAddress(addressDTO);
+
+        AddressDTO body = Optional.ofNullable(result.getBody())
+                .orElseThrow(() -> new AssertionError("Response body should not be null"));
+
+        assertEquals("Street 123", body.getStreet());
+        assertEquals("City1", body.getCity());
+        assertEquals("Neighborhood1", body.getNeighborhood());
+        assertEquals("Apt 101", body.getComplement());
+        assertEquals("Home", body.getTag());
     }
 
     @Test
     void testGetAddressById_AddressExists() {
         AddressDTO addressDTO = createAddress(1L, "Street 123", "City1", "Neighborhood1", "Apt 101", "Home");
         Address address = addressMapper.toEntity(addressDTO);
-        when(addressService.findById(1L)).thenReturn(Optional.of(address));
+        when(addressService.getByIdAndUserCpf(1L, "12345678900")).thenReturn(Optional.of(address));
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.CLIENT.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
         ResponseEntity<AddressDTO> response = addressController.getAddressById(1L);
 
@@ -82,6 +99,11 @@ class AddressControllerTest {
 
         when(addressService.findAll(any())).thenReturn(mockPage);
 
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.CLIENT.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
+
         Page<AddressDTO> result = addressController.getAllAddresses(PageRequest.of(0, 10));
 
         assertEquals(2, result.getContent().size());
@@ -96,6 +118,11 @@ class AddressControllerTest {
 
         when(addressService.update(1L, updatedAddress)).thenReturn(updatedAddress);
 
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
+
         AddressDTO result = addressController.updateAddress(1L, updatedAddressDTO);
 
         assertEquals("Apt 102", result.getComplement());
@@ -105,6 +132,11 @@ class AddressControllerTest {
     @Test
     void testDeleteAddress() {
         when(addressService.delete(1L)).thenReturn(true);
+
+        CustomAuthentication customAuthentication = mock(CustomAuthentication.class);
+        when(customAuthentication.getCpf()).thenReturn("12345678900");
+        when(customAuthentication.getRole()).thenReturn(Role.ADMIN.toString());
+        SecurityContextHolder.getContext().setAuthentication(customAuthentication);
 
         boolean result = addressController.deleteAddress(1L);
 
