@@ -101,8 +101,13 @@ Esse modelo segue a lógica de acesso mencionada, garantindo que administradores
 
 ### Prometheus e Grafana
 
-Para trabalhar com as métricas trabalhei com estas ferramentas, não consegui implementar com containers docker devido a um problema no dockerhub então
-instalei nativamente em minha maquina e disponibilizei neste repositório o arquivo `prometheus.yml` com minha configuração completa do prometheus.
+Para trabalhar com as métricas trabalhei com estas ferramentas, disponibilizei uma instancia tanto no `docker-compose.yml` quanto no
+`docker-compose-prod.yml`, as configurações do prometheus ficaram no arquivo `prometheus.yml`, as métricas e os alertas que desejar devem
+ser configurados de acordo com o que for solicitado no prometheus e no grafana.
+
+<img src="grafana.jpg" width="800px" />
+
+---
 
 ### Quanto ao frontend
 
