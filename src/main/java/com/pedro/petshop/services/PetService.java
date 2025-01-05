@@ -61,6 +61,15 @@ public class PetService {
 
             String filename = "pet_" + id + "_" + file.getOriginalFilename();
             Path filePath = directoryPath.resolve(filename);
+
+            String oldImage = pet.get().getImage();
+            if (oldImage != null && !oldImage.isEmpty()) {
+                Path oldImagePath = directoryPath.resolve(oldImage);
+                if (Files.exists(oldImagePath)) {
+                    Files.delete(oldImagePath);
+                }
+            }
+
             file.transferTo(filePath);
 
             pet.get().setImage(filename);
