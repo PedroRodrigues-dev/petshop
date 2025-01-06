@@ -58,10 +58,8 @@ public class UserController {
 
                         Optional<User> user = userService.findById(cpf);
 
-                        if (user.isPresent()) {
-                                user.get().setPassword("");
+                        if (user.isPresent())
                                 return ResponseEntity.ok(userMapper.toDto(user.get()));
-                        }
                 }
 
                 return ResponseEntity.notFound().build();
@@ -112,7 +110,7 @@ public class UserController {
         @RolesAllowed({ "ADMIN" })
         @GetMapping("/{cpf}")
         public ResponseEntity<UserDTO> getUserById(
-                        @Parameter(description = "CPF of the user to be retrieved") @PathVariable String cpf) {
+                        @Parameter(description = "CPF of the user to be retrieved") @PathVariable("cpf") String cpf) {
                 Optional<User> user = userService.findById(cpf);
 
                 if (user.isPresent())
@@ -146,7 +144,7 @@ public class UserController {
         @RolesAllowed({ "ADMIN" })
         @PutMapping("/{cpf}")
         public UserDTO updateUser(
-                        @Parameter(description = "CPF of the user to be updated") @PathVariable String cpf,
+                        @Parameter(description = "CPF of the user to be updated") @PathVariable("cpf") String cpf,
                         @RequestBody UserDTO user) {
                 return userMapper.toDto(userService.update(cpf, userMapper.toEntity(user)));
         }
@@ -160,7 +158,8 @@ public class UserController {
         })
         @RolesAllowed({ "ADMIN" })
         @DeleteMapping("/{cpf}")
-        public boolean deleteUser(@Parameter(description = "CPF of the user to be deleted") @PathVariable String cpf) {
+        public boolean deleteUser(
+                        @Parameter(description = "CPF of the user to be deleted") @PathVariable("cpf") String cpf) {
                 return userService.delete(cpf);
         }
 }

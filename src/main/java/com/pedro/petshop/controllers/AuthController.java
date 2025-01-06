@@ -67,7 +67,7 @@ public class AuthController {
     public ResponseEntity<TokenDTO> login(@RequestBody LoginDTO loginUser) {
         Optional<User> loggedUser = userService.loginUser(loginUser);
 
-        if (loggedUser.isEmpty()) {
+        if (loggedUser == null || loggedUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 

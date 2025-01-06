@@ -9,7 +9,7 @@ CREATE TABLE clients (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     image VARCHAR(255),
-    cpf VARCHAR(11) UNIQUE,
+    cpf VARCHAR(11),
     registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_client_user FOREIGN KEY (cpf) REFERENCES "users" (cpf)
 );

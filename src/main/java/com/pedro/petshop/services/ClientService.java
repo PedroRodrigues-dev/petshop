@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -14,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.pedro.petshop.configs.Tool;
 import com.pedro.petshop.entities.Client;
 import com.pedro.petshop.repositories.ClientRepository;
 
@@ -82,6 +85,7 @@ public class ClientService {
     }
 
     public Client create(Client client) {
+        client.setRegistrationDate(LocalDateTime.now());
         return clientRepository.save(client);
     }
 
@@ -94,10 +98,11 @@ public class ClientService {
     }
 
     public Client update(Long id, Client client) {
-        if (clientRepository.existsById(id)) {
-            return clientRepository.save(client);
-        }
-        return null;
+        client.setId(id);
+        return clientRepository.findById(id).map(existingClient -> {
+            BeanUtils.copyProperties(client, existingClient, Tool.getNullPropertyNames(client));
+            return clientRepository.save(existingClient);
+        }).orElse(null);
     }
 
     public boolean delete(Long id) {
@@ -121,12 +126,12 @@ public class ClientService {
     }
 
     public Client updateByIdAndCpf(Long id, String cpf, Client updatedClient) {
-        if (clientRepository.existsByIdAndCpf(id, cpf)) {
-            updatedClient.setId(id);
-            return clientRepository.save(updatedClient);
-        } else {
-            throw new RuntimeException("Client not found with id and cpf");
-        }
+        updatedClient.setId(id);
+        updatedClient.setCpf(cpf);
+        return clientRepository.findByIdAndCpf(id, cpf).map(existingClient -> {
+            BeanUtils.copyProperties(updatedClient, existingClient, Tool.getNullPropertyNames(updatedClient));
+            return clientRepository.save(existingClient);
+        }).orElse(null);
     }
 
     public boolean deleteByIdAndCpf(Long id, String cpf) {

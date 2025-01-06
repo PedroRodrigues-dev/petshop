@@ -11,6 +11,7 @@ import com.pedro.petshop.entities.User;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
+    @Mapping(target = "password", expression = "java(\"\")")
     UserDTO toDto(User user);
 
     User toEntity(UserDTO userDTO);

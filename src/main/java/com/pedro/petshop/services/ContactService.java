@@ -2,10 +2,12 @@ package com.pedro.petshop.services;
 
 import java.util.Optional;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.pedro.petshop.configs.Tool;
 import com.pedro.petshop.entities.Contact;
 import com.pedro.petshop.repositories.ContactRepository;
 
@@ -41,10 +43,11 @@ public class ContactService {
     }
 
     public Contact update(Long id, Contact contact) {
-        if (contactRepository.existsById(id)) {
-            return contactRepository.save(contact);
-        }
-        return null;
+        contact.setId(id);
+        return contactRepository.findById(id).map(existingContact -> {
+            BeanUtils.copyProperties(contact, existingContact, Tool.getNullPropertyNames(contact));
+            return contactRepository.save(existingContact);
+        }).orElse(null);
     }
 
     public boolean delete(Long id) {
@@ -68,12 +71,11 @@ public class ContactService {
     }
 
     public Contact updateByIdAndUserCpf(Long id, String cpf, Contact updatedContact) {
-        if (contactRepository.existsByIdAndUserCpf(id, cpf)) {
-            updatedContact.setId(id);
-            return contactRepository.save(updatedContact);
-        } else {
-            throw new RuntimeException("Contact not found with id and cpf");
-        }
+        updatedContact.setId(id);
+        return contactRepository.findByIdAndUserCpf(id, cpf).map(existingContact -> {
+            BeanUtils.copyProperties(updatedContact, existingContact, Tool.getNullPropertyNames(updatedContact));
+            return contactRepository.save(existingContact);
+        }).orElse(null);
     }
 
     public boolean deleteByIdAndUserCpf(Long id, String cpf) {

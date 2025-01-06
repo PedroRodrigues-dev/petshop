@@ -2,10 +2,12 @@ package com.pedro.petshop.services;
 
 import java.util.Optional;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.pedro.petshop.configs.Tool;
 import com.pedro.petshop.entities.Appointment;
 import com.pedro.petshop.repositories.AppointmentRepository;
 
@@ -47,10 +49,11 @@ public class AppointmentService {
     }
 
     public Appointment update(Long id, Appointment appointment) {
-        if (appointmentRepository.existsById(id)) {
-            return appointmentRepository.save(appointment);
-        }
-        return null;
+        appointment.setId(id);
+        return appointmentRepository.findById(id).map(existingAppointment -> {
+            BeanUtils.copyProperties(appointment, existingAppointment, Tool.getNullPropertyNames(appointment));
+            return appointmentRepository.save(existingAppointment);
+        }).orElse(null);
     }
 
     public boolean delete(Long id) {
@@ -74,12 +77,12 @@ public class AppointmentService {
     }
 
     public Appointment updateByIdAndUserCpf(Long id, String cpf, Appointment updatedAppointment) {
-        if (appointmentRepository.existsByIdAndUserCpf(id, cpf)) {
-            updatedAppointment.setId(id);
-            return appointmentRepository.save(updatedAppointment);
-        } else {
-            throw new RuntimeException("Appointment not found with id and cpf");
-        }
+        updatedAppointment.setId(id);
+        return appointmentRepository.findByIdAndUserCpf(id, cpf).map(existingAppointment -> {
+            BeanUtils.copyProperties(updatedAppointment, existingAppointment, Tool.getNullPropertyNames(
+                    updatedAppointment));
+            return appointmentRepository.save(existingAppointment);
+        }).orElse(null);
     }
 
     public boolean deleteByIdAndUserCpf(Long id, String cpf) {

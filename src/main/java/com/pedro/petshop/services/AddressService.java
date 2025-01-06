@@ -2,10 +2,12 @@ package com.pedro.petshop.services;
 
 import java.util.Optional;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.pedro.petshop.configs.Tool;
 import com.pedro.petshop.entities.Address;
 import com.pedro.petshop.repositories.AddressRepository;
 
@@ -41,10 +43,11 @@ public class AddressService {
     }
 
     public Address update(Long id, Address address) {
-        if (addressRepository.existsById(id)) {
-            return addressRepository.save(address);
-        }
-        return null;
+        address.setId(id);
+        return addressRepository.findById(id).map(existingAddress -> {
+            BeanUtils.copyProperties(address, existingAddress, Tool.getNullPropertyNames(address));
+            return addressRepository.save(existingAddress);
+        }).orElse(null);
     }
 
     public boolean delete(Long id) {
@@ -68,12 +71,11 @@ public class AddressService {
     }
 
     public Address updateByIdAndUserCpf(Long id, String cpf, Address updatedAddress) {
-        if (addressRepository.existsByIdAndUserCpf(id, cpf)) {
-            updatedAddress.setId(id);
-            return addressRepository.save(updatedAddress);
-        } else {
-            throw new RuntimeException("Address not found with id and cpf");
-        }
+        updatedAddress.setId(id);
+        return addressRepository.findByIdAndUserCpf(id, cpf).map(existingAddress -> {
+            BeanUtils.copyProperties(updatedAddress, existingAddress, Tool.getNullPropertyNames(updatedAddress));
+            return addressRepository.save(existingAddress);
+        }).orElse(null);
     }
 
     public boolean deleteByIdAndUserCpf(Long id, String cpf) {

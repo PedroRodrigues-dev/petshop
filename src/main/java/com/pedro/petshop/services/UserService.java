@@ -2,12 +2,14 @@ package com.pedro.petshop.services;
 
 import java.util.Optional;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.pedro.petshop.configs.Tool;
 import com.pedro.petshop.dtos.LoginDTO;
 import com.pedro.petshop.entities.User;
 import com.pedro.petshop.enums.Role;
@@ -39,13 +41,15 @@ public class UserService {
     }
 
     public User update(String cpf, User user) {
-        if (userRepository.existsById(cpf)) {
+        if (user.getPassword() != null) {
             String hashedPassword = passwordEncoder.encode(user.getPassword());
             user.setPassword(hashedPassword);
-
-            return userRepository.save(user);
         }
-        return null;
+        user.setCpf(cpf);
+        return userRepository.findById(cpf).map(existingUser -> {
+            BeanUtils.copyProperties(user, existingUser, Tool.getNullPropertyNames(user));
+            return userRepository.save(existingUser);
+        }).orElse(null);
     }
 
     public boolean delete(String cpf) {

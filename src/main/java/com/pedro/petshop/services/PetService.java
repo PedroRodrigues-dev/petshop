@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.pedro.petshop.configs.Tool;
 import com.pedro.petshop.entities.Pet;
 import com.pedro.petshop.repositories.PetRepository;
 
@@ -103,10 +105,11 @@ public class PetService {
     }
 
     public Pet update(Long id, Pet pet) {
-        if (petRepository.existsById(id)) {
-            return petRepository.save(pet);
-        }
-        return null;
+        pet.setId(id);
+        return petRepository.findById(id).map(existingPet -> {
+            BeanUtils.copyProperties(pet, existingPet, Tool.getNullPropertyNames(pet));
+            return petRepository.save(existingPet);
+        }).orElse(null);
     }
 
     public boolean delete(Long id) {
@@ -130,12 +133,11 @@ public class PetService {
     }
 
     public Pet updateByIdAndUserCpf(Long id, String cpf, Pet updatedPet) {
-        if (petRepository.existsByIdAndUserCpf(id, cpf)) {
-            updatedPet.setId(id);
-            return petRepository.save(updatedPet);
-        } else {
-            throw new RuntimeException("Pet not found with id and cpf");
-        }
+        updatedPet.setId(id);
+        return petRepository.findByIdAndUserCpf(id, cpf).map(existingPet -> {
+            BeanUtils.copyProperties(updatedPet, existingPet, Tool.getNullPropertyNames(updatedPet));
+            return petRepository.save(existingPet);
+        }).orElse(null);
     }
 
     public boolean deleteByIdAndUserCpf(Long id, String cpf) {

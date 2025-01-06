@@ -45,6 +45,17 @@ inesperada, problema que pode ocorrer em aplicações que usam bancos de dados e
 
 - Algumas regras de negócio foram propositalmente deixadas abertas durante o planejamento para garantir maior flexibilidade. Isso permite que certas regras sejam ajustadas conforme necessário para atender melhor aos objetivos do sistema. Abaixo, seguem os detalhes:
 
+#### Regras simplificadas propositalmente
+
+- Algumas regras de neǵocio foram simplificadas e precisam de melhorias a longo prazo, por exemplo, os dados de usuário
+  no token tornam inconveniente a mudança dos dados de usuário precisarem de um novo login, além de alguns dados terem sido
+  simplificados para reduzir o prazo de produção desse sistema, as alterações não geraram grande impacto e podem ser
+  modificas em versões futuras.
+
+#### Usuários
+
+- É recomendado que ao alterar dados de usuário que seja solicitado um novo login.
+
 #### Cadastro de Usuários
 
 O sistema possui dois tipos de cadastros de usuários, ambos com método POST:
@@ -66,6 +77,11 @@ Funcionalidade: Permite criar e alterar qualquer informação de usuário.
 - Rotas finalizadas em /logged permitem que qualquer usuário logado altere apenas os próprios dados.
 - Outras rotas de /users são restritas a administradores.
 
+#### Senhas
+
+- Não há restrições via backend.
+- As senhas não são retornadas em rotas de busca por motivos de segurança.
+
 #### Lógica de Clientes
 
 - Não foi implementada uma lógica automática para a criação de clientes. Isso foi proposital, já que o uso final não estava completamente definido.
@@ -73,10 +89,15 @@ Funcionalidade: Permite criar e alterar qualquer informação de usuário.
   Um usuário (como um pai) pode cadastrar seus filhos como "clientes" e cada filho pode gerenciar seus próprios pets dentro da conta do pai, similar ao modelo de perfis da Netflix.
 - Alternativa: Caso desejado, o frontend pode implementar uma lógica para criar clientes diretamente.
 
+#### Raças
+
+- Podem ser criadas apenas por administradores e vistas por qualquer um.
+
 #### Regras sobre CPF
 
 - Foi solicitado que o campo name no usuário fosse usado como CPF.
-- Decisão: Deixei isso em aberto, permitindo que o frontend manipule essa lógica conforme necessário. Assim, mudanças futuras na regra de negócio não impactam o código.
+  Decisão: Deixei isso em aberto, permitindo que o frontend manipule essa lógica conforme necessário. Assim, mudanças futuras na regra de negócio não impactam o código.
+- O CPF foi colocado como dado imutavel para cadastro de usuário e cliente.
 
 #### Nível de Acesso
 
@@ -92,7 +113,7 @@ Funcionalidade: Permite criar e alterar qualquer informação de usuário.
 - O sistema inclui rotas para manipular os seguintes dados:
 
 - Contato, Pets e Endereços: Baseados no ID do cliente.
-- Consultas e Raças: Baseados no ID do pet e ID do cliente.
+- Consultas: Baseados no ID do pet e ID do cliente.
 - Clientes:
   Pelo usuário logado (para clientes).
   Por ID (apenas para administradores).
